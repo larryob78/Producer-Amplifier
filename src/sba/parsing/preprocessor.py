@@ -18,12 +18,8 @@ def preprocess_script_text(raw_text: str) -> str:
     text = re.sub(r"^\s*\d{1,3}\s*$", "", text, flags=re.MULTILINE)
 
     # Remove CONTINUED markers at page breaks (but NOT character CONT'D)
-    text = re.sub(
-        r"^\s*\(CONTINUED\)\s*$", "", text, flags=re.MULTILINE | re.IGNORECASE
-    )
-    text = re.sub(
-        r"^\s*CONTINUED:\s*$", "", text, flags=re.MULTILINE | re.IGNORECASE
-    )
+    text = re.sub(r"^\s*\(CONTINUED\)\s*$", "", text, flags=re.MULTILINE | re.IGNORECASE)
+    text = re.sub(r"^\s*CONTINUED:\s*$", "", text, flags=re.MULTILINE | re.IGNORECASE)
 
     # Collapse 3+ consecutive blank lines into 2
     text = re.sub(r"\n{3,}", "\n\n", text)

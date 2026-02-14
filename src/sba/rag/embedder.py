@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 def get_voyage_client() -> voyageai.Client:
     """Create a Voyage AI client."""
     if not VOYAGE_API_KEY:
-        raise ValueError(
-            "VOYAGE_API_KEY not set. Add it to .env or set the environment variable."
-        )
+        raise ValueError("VOYAGE_API_KEY not set. Add it to .env or set the environment variable.")
     return voyageai.Client(api_key=VOYAGE_API_KEY)
 
 

@@ -1,8 +1,8 @@
 """Tests for character extraction from screenplay text."""
 
 from sba.parsing.character_parser import (
-    extract_characters_from_text,
     canonicalize_character_name,
+    extract_characters_from_text,
 )
 
 

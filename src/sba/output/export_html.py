@@ -19,7 +19,7 @@ def _build_html(breakdown: BreakdownOutput) -> str:
     pages = data["project_summary"]["script_pages_estimate"] or "—"
     scene_count = len(data["scenes"])
 
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -317,7 +317,7 @@ window.addEventListener('scroll',function(){{
 }},{{passive:true}});
 </script>
 </body>
-</html>'''
+</html>"""
 
 
 def export_html(breakdown: BreakdownOutput, output_path: Path) -> Path:

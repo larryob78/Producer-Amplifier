@@ -93,9 +93,7 @@ class HybridRetriever:
             if bm25_scores[idx] > 0:
                 cid = self.chunks[idx].chunk_id
                 norm_score = bm25_scores[idx] / max_bm25
-                chunk_scores[cid] = (
-                    chunk_scores.get(cid, 0.0) + sparse_weight * norm_score
-                )
+                chunk_scores[cid] = chunk_scores.get(cid, 0.0) + sparse_weight * norm_score
 
         # Rank by combined score
         ranked_ids = sorted(chunk_scores, key=lambda cid: chunk_scores[cid], reverse=True)
@@ -141,9 +139,7 @@ class HybridRetriever:
         all_chunks: dict[str, CorpusChunk] = {}
 
         for category in vfx_categories:
-            results = self.retrieve(
-                f"VFX category: {category}", n_dense=5, n_sparse=5
-            )
+            results = self.retrieve(f"VFX category: {category}", n_dense=5, n_sparse=5)
             for chunk in results:
                 if chunk.chunk_id not in all_chunks:
                     all_chunks[chunk.chunk_id] = chunk

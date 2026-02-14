@@ -2,8 +2,6 @@
 
 import csv
 import io
-import json
-from pathlib import Path
 
 from sba.output.export_csv import (
     CSV_COLUMNS,

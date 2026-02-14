@@ -73,9 +73,7 @@ def validate_breakdown_json(raw_text: str) -> ValidationResult:
     if data is not None:
         try:
             output = BreakdownOutput.model_validate(data)
-            return ValidationResult(
-                is_valid=True, output=output, raw_json=stripped
-            )
+            return ValidationResult(is_valid=True, output=output, raw_json=stripped)
         except ValidationError as e:
             return ValidationResult(
                 is_valid=False,

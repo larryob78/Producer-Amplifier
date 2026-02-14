@@ -123,19 +123,13 @@ def analyze(
     click.echo()
     click.echo("=== Summary ===")
     click.echo(f"Scenes: {len(result.scenes)}")
-    click.echo(
-        f"VFX heaviness: {result.global_flags.overall_vfx_heaviness}"
-    )
+    click.echo(f"VFX heaviness: {result.global_flags.overall_vfx_heaviness}")
     if result.global_flags.top_risk_themes:
-        click.echo(
-            f"Top risks: {', '.join(result.global_flags.top_risk_themes)}"
-        )
+        click.echo(f"Top risks: {', '.join(result.global_flags.top_risk_themes)}")
     if result.hidden_cost_radar:
         click.echo(f"Hidden cost flags: {len(result.hidden_cost_radar)}")
 
-    total_shots_likely = sum(
-        s.vfx_shot_count_estimate.likely for s in result.scenes
-    )
+    total_shots_likely = sum(s.vfx_shot_count_estimate.likely for s in result.scenes)
     click.echo(f"Est. total VFX shots (likely): {total_shots_likely}")
 
 
@@ -163,11 +157,10 @@ def build_corpus():
 @cli.command()
 def index_corpus():
     """Index the corpus into ChromaDB for full RAG mode."""
+    from sba.config import VOYAGE_API_KEY
     from sba.rag.corpus_builder import build_corpus as _build_corpus
     from sba.rag.embedder import embed_chunks, get_voyage_client
     from sba.rag.vector_store import index_chunks
-
-    from sba.config import VOYAGE_API_KEY
 
     if not VOYAGE_API_KEY:
         click.echo(

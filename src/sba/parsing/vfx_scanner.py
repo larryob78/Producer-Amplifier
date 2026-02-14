@@ -3,17 +3,27 @@
 from __future__ import annotations
 
 import re
+
 from sba.parsing.models import VFXTrigger
 
 # Each category has keyword patterns and false-positive exclusion patterns
 VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     "water": {
         "keywords": [
-            r"\bocean\b", r"\bsea\b", r"\briver\b", r"\blake\b",
-            r"\bpool\b", r"\bflood(?:ing|ed|s)?\b", r"\bunderwater\b",
-            r"\bswim(?:s|ming)?\b", r"\bdive[sd]?\b", r"\bwave[sd]?\b",
-            r"\btsunami\b", r"\bsplash(?:es|ing)?\b",
-            r"\bsubmerg(?:ed|es|ing)?\b", r"\bdrown(?:s|ing|ed)?\b",
+            r"\bocean\b",
+            r"\bsea\b",
+            r"\briver\b",
+            r"\blake\b",
+            r"\bpool\b",
+            r"\bflood(?:ing|ed|s)?\b",
+            r"\bunderwater\b",
+            r"\bswim(?:s|ming)?\b",
+            r"\bdive[sd]?\b",
+            r"\bwave[sd]?\b",
+            r"\btsunami\b",
+            r"\bsplash(?:es|ing)?\b",
+            r"\bsubmerg(?:ed|es|ing)?\b",
+            r"\bdrown(?:s|ing|ed)?\b",
         ],
         "exclusions": [
             r"water\s*(?:bottle|glass|cup|cooler|proof|tight|color|mark)",
@@ -22,11 +32,19 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "fire_pyro": {
         "keywords": [
-            r"\bflame[sd]?\b", r"\bburn(?:s|ing|ed)?\b",
-            r"\bexplo(?:sion|de[sd]?|ding)\b", r"\bblast\b",
-            r"\binferno\b", r"\bblaze[sd]?\b", r"\bignite[sd]?\b",
-            r"\bsmoke\b", r"\bspark[sd]?\b", r"\bdetonate[sd]?\b",
-            r"\bgunfire\b", r"\bmuzzle\s*flash\b", r"\bfireball\b",
+            r"\bflame[sd]?\b",
+            r"\bburn(?:s|ing|ed)?\b",
+            r"\bexplo(?:sion|de[sd]?|ding)\b",
+            r"\bblast\b",
+            r"\binferno\b",
+            r"\bblaze[sd]?\b",
+            r"\bignite[sd]?\b",
+            r"\bsmoke\b",
+            r"\bspark[sd]?\b",
+            r"\bdetonate[sd]?\b",
+            r"\bgunfire\b",
+            r"\bmuzzle\s*flash\b",
+            r"\bfireball\b",
         ],
         "exclusions": [
             r"fire[sd]\s+(?:from|him|her|them|the\s+employee|a\s+question|off\s+an?\s+email)",
@@ -37,11 +55,18 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "crowds_extras": {
         "keywords": [
-            r"\bcrowd[sd]?\b", r"\bmob\b", r"\bhorde\b",
-            r"\bhundreds\b", r"\bthousands\b",
-            r"\barm(?:y|ies)\b", r"\bsoldier[sd]?\b", r"\btroop[sd]?\b",
-            r"\briot(?:s|ing|ers?)?\b", r"\bstampede\b",
-            r"\bparade\b", r"\bstadium\b",
+            r"\bcrowd[sd]?\b",
+            r"\bmob\b",
+            r"\bhorde\b",
+            r"\bhundreds\b",
+            r"\bthousands\b",
+            r"\barm(?:y|ies)\b",
+            r"\bsoldier[sd]?\b",
+            r"\btroop[sd]?\b",
+            r"\briot(?:s|ing|ers?)?\b",
+            r"\bstampede\b",
+            r"\bparade\b",
+            r"\bstadium\b",
         ],
         "exclusions": [],
         "severity": "medium",
@@ -49,11 +74,16 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     "vehicles": {
         "keywords": [
             r"\bcar\s+(?:chase|crash|wreck|flip|roll)\b",
-            r"\bhelicopter\b", r"\bchopper\b",
-            r"\baircraft\b", r"\bjet\b", r"\bspacecraft\b",
-            r"\bspaceship\b", r"\bsubmarine\b",
+            r"\bhelicopter\b",
+            r"\bchopper\b",
+            r"\baircraft\b",
+            r"\bjet\b",
+            r"\bspacecraft\b",
+            r"\bspaceship\b",
+            r"\bsubmarine\b",
             r"\btrain\b.*\b(?:crash|wreck|derail)\b",
-            r"\bcrash(?:es|ing|ed)?\b", r"\bcollision\b",
+            r"\bcrash(?:es|ing|ed)?\b",
+            r"\bcollision\b",
         ],
         "exclusions": [
             r"tank\s*(?:top|of\s+gas)",
@@ -62,11 +92,19 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "creatures_animals": {
         "keywords": [
-            r"\bmonster[sd]?\b", r"\bcreature[sd]?\b", r"\balien[sd]?\b",
-            r"\bdragon[sd]?\b", r"\bdinosaur[sd]?\b", r"\bzombie[sd]?\b",
-            r"\bwolf\b", r"\bwolves\b",
-            r"\bmutant[sd]?\b", r"\bdemon[sd]?\b", r"\bghost[sd]?\b",
-            r"\bwerewolf\b", r"\bvampire[sd]?\b",
+            r"\bmonster[sd]?\b",
+            r"\bcreature[sd]?\b",
+            r"\balien[sd]?\b",
+            r"\bdragon[sd]?\b",
+            r"\bdinosaur[sd]?\b",
+            r"\bzombie[sd]?\b",
+            r"\bwolf\b",
+            r"\bwolves\b",
+            r"\bmutant[sd]?\b",
+            r"\bdemon[sd]?\b",
+            r"\bghost[sd]?\b",
+            r"\bwerewolf\b",
+            r"\bvampire[sd]?\b",
         ],
         "exclusions": [
             r"bear\s+(?:with|in\s+mind)",
@@ -76,10 +114,15 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "destruction": {
         "keywords": [
-            r"\bcollaps(?:e[sd]?|ing)\b", r"\bdemolish\b",
-            r"\bdestroy(?:s|ed|ing)?\b", r"\bdestruction\b",
-            r"\bearthquake\b", r"\btornado\b", r"\bhurricane\b",
-            r"\bavalanch\b", r"\bshatter(?:s|ed|ing)?\b",
+            r"\bcollaps(?:e[sd]?|ing)\b",
+            r"\bdemolish\b",
+            r"\bdestroy(?:s|ed|ing)?\b",
+            r"\bdestruction\b",
+            r"\bearthquake\b",
+            r"\btornado\b",
+            r"\bhurricane\b",
+            r"\bavalanch\b",
+            r"\bshatter(?:s|ed|ing)?\b",
             r"\bcrumbl(?:e[sd]?|ing)\b",
         ],
         "exclusions": [],
@@ -87,10 +130,15 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "weapons_combat": {
         "keywords": [
-            r"\bgun[sd]?\b", r"\bpistol\b", r"\brifle\b", r"\bshotgun\b",
+            r"\bgun[sd]?\b",
+            r"\bpistol\b",
+            r"\brifle\b",
+            r"\bshotgun\b",
             r"\bshoot(?:s|ing|out)?\b",
-            r"\bsword[sd]?\b", r"\blightsaber[sd]?\b",
-            r"\bbattle\b", r"\bblaster[sd]?\b",
+            r"\bsword[sd]?\b",
+            r"\blightsaber[sd]?\b",
+            r"\bbattle\b",
+            r"\bblaster[sd]?\b",
         ],
         "exclusions": [
             r"gun\s*(?:metal|powder\s+grey)",
@@ -99,8 +147,11 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "aerial_height": {
         "keywords": [
-            r"\bfly(?:s|ing)?\b", r"\bflight\b", r"\bsoar(?:s|ing)?\b",
-            r"\bhover(?:s|ing)?\b", r"\bparachute\b",
+            r"\bfly(?:s|ing)?\b",
+            r"\bflight\b",
+            r"\bsoar(?:s|ing)?\b",
+            r"\bhover(?:s|ing)?\b",
+            r"\bparachute\b",
             r"\bskydiv(?:e|ing)\b",
         ],
         "exclusions": [
@@ -110,9 +161,13 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "weather_atmosphere": {
         "keywords": [
-            r"\bstorm(?:s|ing|y)?\b", r"\blightning\b",
-            r"\bthunder\b", r"\bsnow(?:s|ing|storm)?\b",
-            r"\bblizzard\b", r"\bfog(?:gy)?\b", r"\bmist(?:y)?\b",
+            r"\bstorm(?:s|ing|y)?\b",
+            r"\blightning\b",
+            r"\bthunder\b",
+            r"\bsnow(?:s|ing|storm)?\b",
+            r"\bblizzard\b",
+            r"\bfog(?:gy)?\b",
+            r"\bmist(?:y)?\b",
         ],
         "exclusions": [
             r"\bbrain\b",
@@ -121,10 +176,15 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
     },
     "supernatural_magic": {
         "keywords": [
-            r"\bmagic\b", r"\bspell[sd]?\b", r"\bteleport\b",
-            r"\bvanish(?:es|ed|ing)?\b", r"\btransform(?:s|ing|ation)?\b",
-            r"\blevitat(?:e[sd]?|ing|ion)\b", r"\bforce[\s-]?field\b",
-            r"\bportal[sd]?\b", r"\bsupernatural\b",
+            r"\bmagic\b",
+            r"\bspell[sd]?\b",
+            r"\bteleport\b",
+            r"\bvanish(?:es|ed|ing)?\b",
+            r"\btransform(?:s|ing|ation)?\b",
+            r"\blevitat(?:e[sd]?|ing|ion)\b",
+            r"\bforce[\s-]?field\b",
+            r"\bportal[sd]?\b",
+            r"\bsupernatural\b",
             r"\b(?:the\s+)?force\b",
         ],
         "exclusions": [

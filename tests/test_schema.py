@@ -1,13 +1,10 @@
 """Tests for the output schema models."""
 
-import json
 from sba.output.schema import (
     BreakdownOutput,
     Scene,
     VfxCategory,
     VfxShotCountEstimate,
-    ProductionFlags,
-    HiddenCostItem,
 )
 
 
@@ -43,6 +40,7 @@ def test_shot_count_estimate_ordering():
 def test_cost_risk_score_range():
     """Cost risk must be 1-5."""
     import pytest
+
     with pytest.raises(Exception):
         Scene(
             scene_id="SC001",

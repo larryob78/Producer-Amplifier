@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+
 from sba.parsing.models import Character
 
 # Character cue pattern: uppercase name, optional extension in parens
