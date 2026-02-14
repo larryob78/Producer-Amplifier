@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from sba.config import CLAUDE_MODEL
 from sba.llm.claude_client import call_claude, get_anthropic_client
 from sba.llm.prompts import (
     SYSTEM_PROMPT,
@@ -25,6 +26,7 @@ def analyze_script(
     title: str = "Untitled",
     use_rag: bool = False,
     max_retries: int = 1,
+    model: str | None = None,
 ) -> BreakdownOutput:
     """Run the full script breakdown analysis pipeline.
 
@@ -34,6 +36,7 @@ def analyze_script(
         title: Project title.
         use_rag: If True, use full RAG retrieval. If False, use RAG-lite (static injection).
         max_retries: Number of retries on validation failure.
+        model: Override the Claude model identifier.
 
     Returns:
         Validated BreakdownOutput Pydantic model.
@@ -45,6 +48,8 @@ def analyze_script(
     if file_path is None and text is None:
         raise ValueError("Either file_path or text must be provided.")
 
+    model = model or CLAUDE_MODEL
+
     # Step 1: Parse the script
     if file_path:
         parsed = parse_script_file(Path(file_path), title=title)
@@ -52,6 +57,10 @@ def analyze_script(
     else:
         parsed = parse_script_text(text, title=title)
         script_text = text
+
+    # Calculate dynamic max_tokens based on scene count
+    scene_count = len(parsed.scenes)
+    dynamic_tokens = min(max(4096, scene_count * 800 + 2000), 32768)
 
     # Step 2: Get corpus context
     if use_rag:
@@ -74,6 +83,8 @@ def analyze_script(
         system_prompt=SYSTEM_PROMPT,
         user_prompt=user_prompt,
         client=client,
+        model=model,
+        max_tokens=dynamic_tokens,
     )
 
     # Step 5: Validate
@@ -94,6 +105,8 @@ def analyze_script(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=retry_prompt,
             client=client,
+            model=model,
+            max_tokens=dynamic_tokens,
         )
 
         result = validate_breakdown_json(raw_json)

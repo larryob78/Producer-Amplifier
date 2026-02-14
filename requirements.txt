@@ -1,0 +1,12 @@
+# Pinned dependencies for reproducible installs
+# Generated from pip freeze — update by running:
+#   pip freeze | grep -E "^(anthropic|pdfplumber|pydantic==|chromadb|voyageai|rank-bm25|json.repair|click|python-dotenv)" > requirements.txt
+anthropic==0.79.0
+chromadb==1.5.0
+click==8.3.1
+json_repair==0.57.1
+pdfplumber==0.11.9
+pydantic==2.12.5
+python-dotenv==1.2.1
+rank-bm25==0.2.2
+voyageai==0.3.7

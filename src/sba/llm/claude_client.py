@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import anthropic
 
-from sba.config import ANTHROPIC_API_KEY, CLAUDE_MODEL
+from sba.config import ANTHROPIC_API_KEY, CLAUDE_MODEL, MAX_TOKENS
 
 
 def get_anthropic_client() -> anthropic.Anthropic:
@@ -21,7 +21,7 @@ def call_claude(
     user_prompt: str,
     client: anthropic.Anthropic | None = None,
     model: str = CLAUDE_MODEL,
-    max_tokens: int = 16384,
+    max_tokens: int | None = None,
     temperature: float = 0.2,
 ) -> str:
     """Make a single Claude API call and return the text response.
@@ -38,6 +38,8 @@ def call_claude(
         The text content of Claude's response.
     """
     client = client or get_anthropic_client()
+    if max_tokens is None:
+        max_tokens = MAX_TOKENS
 
     message = client.messages.create(
         model=model,

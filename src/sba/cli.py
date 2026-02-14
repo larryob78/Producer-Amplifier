@@ -41,12 +41,19 @@ def cli():
     default=False,
     help="Output only JSON (skip CSV export).",
 )
+@click.option(
+    "--model",
+    "-m",
+    default=None,
+    help="Override Claude model (default: claude-opus-4-6).",
+)
 def analyze(
     script_path: str,
     title: str | None,
     output_dir: str | None,
     use_rag: bool,
     json_only: bool,
+    model: str | None,
 ):
     """Analyze a screenplay and generate a VFX breakdown.
 
@@ -95,6 +102,7 @@ def analyze(
             file_path=script_file,
             title=title,
             use_rag=use_rag,
+            model=model,
         )
     except RuntimeError as e:
         click.echo(f"Analysis failed: {e}", err=True)
