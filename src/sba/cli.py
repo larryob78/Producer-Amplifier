@@ -54,6 +54,7 @@ def analyze(
     """
     from sba.llm.generator import analyze_script
     from sba.output.export_csv import export_scenes_csv
+    from sba.output.export_html import export_html
 
     script_file = Path(script_path)
     title = title or script_file.stem
@@ -108,11 +109,15 @@ def analyze(
     json_path.write_text(json_data, encoding="utf-8")
     click.echo(f"JSON saved: {json_path}")
 
-    # Export CSV
+    # Export CSV + HTML
     if not json_only:
         csv_path = out_dir / f"{safe_title}_{timestamp}.csv"
         export_scenes_csv(result, csv_path)
         click.echo(f"CSV saved:  {csv_path}")
+
+        html_path = out_dir / f"{safe_title}_{timestamp}.html"
+        export_html(result, html_path)
+        click.echo(f"HTML saved: {html_path}")
 
     # Print summary
     click.echo()
@@ -209,6 +214,29 @@ def export_csv(json_path: str, output: str | None):
     csv_path = Path(output) if output else json_file.with_suffix(".csv")
     export_scenes_csv(breakdown, csv_path)
     click.echo(f"CSV exported: {csv_path}")
+
+
+@cli.command()
+@click.argument("json_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output HTML path. Defaults to same directory as JSON.",
+)
+def export_html_cmd(json_path: str, output: str | None):
+    """Export a breakdown JSON file to HTML production bible."""
+    from sba.output.export_html import export_html
+    from sba.output.schema import BreakdownOutput
+
+    json_file = Path(json_path)
+    data = json.loads(json_file.read_text(encoding="utf-8"))
+    breakdown = BreakdownOutput.model_validate(data)
+
+    html_path = Path(output) if output else json_file.with_suffix(".html")
+    export_html(breakdown, html_path)
+    click.echo(f"HTML exported: {html_path}")
 
 
 def main():
