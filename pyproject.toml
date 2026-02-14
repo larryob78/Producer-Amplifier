@@ -4,40 +4,43 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "napkin-producer-amplifier"
-version = "0.1.0"
-description = "Napkin — Producer Amplifier: AI-powered VFX script breakdown for film producers"
+version = "0.4.0"
+description = "AI-powered production intelligence for film producers — script breakdown, budget, chatbot, voice"
 requires-python = ">=3.11"
 dependencies = [
+    # Core LLM
     "anthropic>=0.40.0",
+    # PDF parsing
     "pdfplumber>=0.10.0",
     "pydantic>=2.0",
+    # RAG
     "chromadb>=0.5.0",
     "voyageai>=0.3.0",
     "rank-bm25>=0.2.0",
     "json-repair>=0.28.0",
+    # CLI
     "click>=8.0",
     "python-dotenv>=1.0",
+    # Producer Copilot (new)
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
+    "websockets>=12.0",
+    "openpyxl>=3.1.0",
+    "httpx>=0.27.0",
+    "python-multipart>=0.0.9",
+    "openai>=1.30.0",
+    # Document parsing
     "python-docx>=1.1.0",
 ]
 
 [project.optional-dependencies]
-xlsx = ["openpyxl>=3.1.0"]
-dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=24.0", "isort>=5.0", "ruff>=0.4", "pre-commit>=3.0", "openpyxl>=3.1.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.scripts]
 sba = "sba.cli:main"
-napkin = "sba.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.black]
-line-length = 99
-target-version = ["py311"]
-
-[tool.isort]
-profile = "black"
-line_length = 99
