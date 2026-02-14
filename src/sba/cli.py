@@ -47,6 +47,30 @@ def cli():
     default=None,
     help="Override Claude model (default: claude-opus-4-6).",
 )
+@click.option(
+    "--staged",
+    is_flag=True,
+    default=False,
+    help="Use staged per-scene analysis with synthesis pass.",
+)
+@click.option(
+    "--max-scenes",
+    type=int,
+    default=None,
+    help="Analyze only first N scenes (for quick sampling).",
+)
+@click.option(
+    "--batch-size",
+    type=int,
+    default=5,
+    help="Scenes per Claude call in staged mode (default: 5).",
+)
+@click.option(
+    "--no-cache",
+    is_flag=True,
+    default=False,
+    help="Bypass result cache.",
+)
 def analyze(
     script_path: str,
     title: str | None,
@@ -54,6 +78,10 @@ def analyze(
     use_rag: bool,
     json_only: bool,
     model: str | None,
+    staged: bool,
+    max_scenes: int | None,
+    batch_size: int,
+    no_cache: bool,
 ):
     """Analyze a screenplay and generate a VFX breakdown.
 
@@ -74,6 +102,10 @@ def analyze(
     click.echo(f"Analyzing: {script_file.name}")
     click.echo(f"Title: {title}")
     click.echo(f"Mode: {'Full RAG' if use_rag else 'RAG-lite (static corpus)'}")
+    if staged:
+        click.echo(f"Strategy: Staged (batch_size={batch_size})")
+        if max_scenes:
+            click.echo(f"Sampling: first {max_scenes} scenes only")
     click.echo()
 
     # Check API key before expensive work
@@ -97,13 +129,30 @@ def analyze(
         )
         sys.exit(1)
 
+    def _progress(step: int, total: int, message: str) -> None:
+        click.echo(f"  [{step}/{total}] {message}")
+
     try:
-        result = analyze_script(
-            file_path=script_file,
-            title=title,
-            use_rag=use_rag,
-            model=model,
-        )
+        if staged:
+            from sba.llm.generator import analyze_script_staged
+
+            result = analyze_script_staged(
+                file_path=script_file,
+                title=title,
+                use_rag=use_rag,
+                model=model,
+                batch_size=batch_size,
+                max_scenes=max_scenes,
+                use_cache=not no_cache,
+                progress_callback=_progress,
+            )
+        else:
+            result = analyze_script(
+                file_path=script_file,
+                title=title,
+                use_rag=use_rag,
+                model=model,
+            )
     except RuntimeError as e:
         click.echo(f"Analysis failed: {e}", err=True)
         sys.exit(1)

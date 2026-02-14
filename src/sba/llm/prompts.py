@@ -131,6 +131,123 @@ def build_user_prompt(
     return "\n".join(parts)
 
 
+SCENE_SYSTEM_PROMPT = f"""You are an expert VFX producer analyzing individual scenes from a screenplay. For each scene, produce a detailed VFX breakdown.
+
+## Output Requirements:
+Output valid JSON — a single object with a "scenes" array containing the analyzed scenes. No text before or after. No markdown fences.
+
+### VFX Categories (ONLY use these values):
+[{_VFX_CATEGORIES_LIST}]
+
+### Scene Schema:
+Each scene object must have:
+- scene_id, slugline, int_ext, day_night, page_count_eighths, location_type
+- characters, scene_summary, vfx_triggers, production_flags, vfx_categories
+- vfx_shot_count_estimate (min, likely, max), invisible_vfx_likelihood
+- cost_risk_score (1-5), schedule_risk_score (1-5), risk_reasons
+- suggested_capture, notes_for_producer, uncertainties
+
+## Scoring Guidelines:
+- cost_risk_score 1: No significant VFX. Simple paint/cleanup at most.
+- cost_risk_score 2: Standard VFX work (sky replacement, screen inserts, wire removal).
+- cost_risk_score 3: Moderate VFX (set extensions, practical augmentation, crowd tiling).
+- cost_risk_score 4: Heavy VFX (CG creatures, destruction, hero water/fire sequences).
+- cost_risk_score 5: Extreme VFX (multiple CG characters, large-scale destruction, novel effects R&D).
+
+Be thorough: identify ALL VFX triggers including subtle ones (continuity, beauty work, screen inserts).
+"""
+
+
+SYNTHESIS_SYSTEM_PROMPT = """You are an expert VFX producer synthesizing a project-level summary from per-scene VFX breakdowns. Given the individual scene analyses, produce the global assessment.
+
+## Output Requirements:
+Output valid JSON with these fields only. No text before/after. No markdown fences.
+
+{{
+  "project_summary": {{
+    "project_title": string,
+    "date_analyzed": string (ISO 8601),
+    "analysis_scope": "full_script" | "excerpt",
+    "script_pages_estimate": integer or null,
+    "total_scene_count": integer,
+    "confidence_notes": array of strings
+  }},
+  "global_flags": {{
+    "overall_vfx_heaviness": "low" | "medium" | "high" | "extreme",
+    "likely_virtual_production_fit": "low" | "medium" | "high",
+    "top_risk_themes": array of strings
+  }},
+  "hidden_cost_radar": [array of {{
+    "flag": string,
+    "severity": "low" | "medium" | "high" | "critical",
+    "where": array of scene_id strings,
+    "why_it_matters": string,
+    "mitigation_ideas": array of strings
+  }}],
+  "key_questions_for_team": {{
+    "for_producer": array of strings,
+    "for_vfx_supervisor": array of strings,
+    "for_dp_camera": array of strings,
+    "for_locations_art_dept": array of strings
+  }}
+}}
+
+Think holistically: identify cross-scene patterns, accumulating costs, and project-wide risks that individual scene analysis might miss.
+"""
+
+
+def build_scene_user_prompt(
+    scene_texts: list[str],
+    corpus_context: str = "",
+    scene_metadata: str = "",
+) -> str:
+    """Build the user prompt for per-scene/batch analysis.
+
+    Args:
+        scene_texts: List of raw scene texts to analyze.
+        corpus_context: RAG or corpus context.
+        scene_metadata: Pre-analysis metadata for these scenes.
+    """
+    parts = ["Analyze the following scene(s) and produce the VFX breakdown JSON.\n"]
+
+    if corpus_context:
+        parts.append("## Reference Material\n" f"{corpus_context}\n")
+
+    if scene_metadata:
+        parts.append("## Pre-Analysis\n" f"{scene_metadata}\n")
+
+    for i, text in enumerate(scene_texts, 1):
+        parts.append(f"## Scene {i}\n\n{text}")
+
+    return "\n".join(parts)
+
+
+def build_synthesis_user_prompt(
+    scene_results_json: str,
+    title: str,
+    total_scenes: int,
+    pages_estimate: int | None = None,
+) -> str:
+    """Build the user prompt for the synthesis pass.
+
+    Args:
+        scene_results_json: JSON string of all validated scene results.
+        title: Project title.
+        total_scenes: Total number of scenes analyzed.
+        pages_estimate: Estimated script page count.
+    """
+    parts = [
+        f'Synthesize a project-level VFX assessment for "{title}".\n',
+        f"Total scenes: {total_scenes}",
+        f"Estimated pages: {pages_estimate or 'unknown'}\n",
+        "## Per-Scene Results\n",
+        f"{scene_results_json}\n",
+        "Based on these scene breakdowns, produce the project_summary, global_flags, "
+        "hidden_cost_radar, and key_questions_for_team.",
+    ]
+    return "\n".join(parts)
+
+
 def build_parsing_summary(parsed_script) -> str:
     """Build a text summary of parsing results for prompt injection.
 
