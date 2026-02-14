@@ -992,6 +992,67 @@ body {
 }
 
 /* ================================================================
+   LOAD JSON BUTTON
+   ================================================================ */
+.load-json-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.load-json-btn:hover {
+  background: rgba(201,168,76,0.20);
+  color: var(--text-1);
+}
+
+/* ================================================================
+   DRAG-DROP OVERLAY
+   ================================================================ */
+.drop-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15,14,13,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+.drop-overlay.visible { display: flex; }
+.drop-overlay-inner {
+  text-align: center;
+  padding: 48px 64px;
+  border: 2px dashed var(--accent);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+.drop-overlay-inner svg {
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.drop-text {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 6px;
+}
+.drop-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+}
+
+/* ================================================================
    BACK TO TOP
    ================================================================ */
 .back-to-top {
@@ -1045,7 +1106,7 @@ body {
    PRINT
    ================================================================ */
 @media print {
-  .nav, .back-to-top, .nav-mobile-menu { display: none !important; }
+  .nav, .back-to-top, .nav-mobile-menu, .drop-overlay { display: none !important; }
   .page { padding-top: 0; }
   body { background: #fff; color: #222; }
   .scene-sheet {
