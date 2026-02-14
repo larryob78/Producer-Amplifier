@@ -9,60 +9,40 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ================================================================
-   PRODUCTION BIBLE — Design System
-   Warm dark palette · document-first · serif authority
+   PRODUCTION BIBLE — Design System v2
+   Warm dark palette · collapsible scenes · search · filters
    ================================================================ */
 
 :root {
-  /* Warm dark layers — like paper in a dimmed production office */
   --bg: #0f0e0d;
   --surface: #171614;
   --surface-2: #1e1d1a;
   --surface-3: #262522;
   --surface-raised: #2d2b27;
 
-  /* Edges — warm, barely there */
   --rule: rgba(255,245,230,0.06);
   --rule-strong: rgba(255,245,230,0.12);
   --rule-accent: rgba(255,245,230,0.18);
 
-  /* Text — warm hierarchy */
+  /* Text — improved contrast */
   --text-1: #e8e4de;
   --text-2: #b0a99e;
-  --text-3: #7a7368;
-  --text-4: #4d473f;
+  --text-3: #948d82;
+  --text-4: #5e574d;
 
-  /* Risk spectrum — 5 calibrated stops */
-  --r1: #5a9e6f;
-  --r2: #8fb065;
-  --r3: #c9a84c;
-  --r4: #cf7a3a;
-  --r5: #c4463a;
+  /* Risk spectrum */
+  --r1: #5a9e6f; --r2: #8fb065; --r3: #c9a84c; --r4: #cf7a3a; --r5: #c4463a;
 
-  /* Accent — warm gold, used only for navigation/interactive */
   --accent: #c9a84c;
   --accent-dim: rgba(201,168,76,0.10);
 
-  /* Severity backgrounds */
-  --sev-critical-bg: rgba(196,70,58,0.06);
-  --sev-critical-border: rgba(196,70,58,0.20);
-  --sev-high-bg: rgba(207,122,58,0.06);
-  --sev-high-border: rgba(207,122,58,0.20);
-  --sev-medium-bg: rgba(201,168,76,0.06);
-  --sev-medium-border: rgba(201,168,76,0.20);
-  --sev-low-bg: rgba(90,158,111,0.06);
-  --sev-low-border: rgba(90,158,111,0.20);
-
-  /* Spacing */
   --page-max: 920px;
   --gutter: 48px;
 
-  /* Type scale */
   --serif: 'Source Serif 4', 'Georgia', serif;
   --sans: 'Inter', -apple-system, sans-serif;
   --mono: 'JetBrains Mono', 'SF Mono', monospace;
 
-  /* Motion */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -78,13 +58,13 @@ body {
 }
 
 /* ================================================================
-   STICKY NAV — slim, document-style
+   STICKY NAV
    ================================================================ */
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 44px;
-  background: rgba(15,14,13,0.88);
+  background: rgba(15,14,13,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--rule);
@@ -99,7 +79,7 @@ body {
   padding: 0 var(--gutter);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
 }
 .nav-brand {
   font-family: var(--mono);
@@ -108,11 +88,13 @@ body {
   color: var(--text-4);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .nav-brand strong { color: var(--text-2); }
 .nav-links {
   display: flex;
-  gap: 24px;
+  gap: 20px;
+  flex: 1;
 }
 .nav-links a {
   font-size: 12px;
@@ -124,6 +106,177 @@ body {
 }
 .nav-links a:hover { color: var(--text-2); }
 .nav-links a.active { color: var(--accent); }
+
+/* Search in nav */
+.nav-search {
+  position: relative;
+  margin-left: auto;
+}
+.nav-search input {
+  font-family: var(--mono);
+  font-size: 11px;
+  width: 180px;
+  padding: 4px 10px 4px 28px;
+  border-radius: 4px;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface-2);
+  color: var(--text-2);
+  outline: none;
+  transition: border-color 0.2s, width 0.3s var(--ease);
+}
+.nav-search input:focus {
+  border-color: var(--accent);
+  width: 220px;
+}
+.nav-search input::placeholder { color: var(--text-4); }
+.nav-search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-4);
+  pointer-events: none;
+}
+.search-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  white-space: nowrap;
+  margin-left: 8px;
+  display: none;
+}
+.search-count.visible { display: inline; }
+
+/* Jump-to-scene dropdown */
+.jump-dropdown {
+  position: relative;
+}
+.jump-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface-2);
+  color: var(--text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s;
+}
+.jump-btn:hover { border-color: var(--accent); color: var(--text-2); }
+.jump-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  max-height: 400px;
+  overflow-y: auto;
+  width: 320px;
+  z-index: 200;
+}
+.jump-menu.open { display: block; }
+.jump-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.jump-item:hover { background: var(--surface-2); }
+.jump-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.jump-item-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  min-width: 28px;
+}
+.jump-item-slug {
+  font-family: var(--mono);
+  font-size: 11px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hamburger for mobile */
+.nav-hamburger {
+  display: none;
+  cursor: pointer;
+  width: 20px;
+  height: 16px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.nav-hamburger span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-3);
+  border-radius: 1px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.nav-mobile-menu {
+  display: none;
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  background: rgba(15,14,13,0.96);
+  border-bottom: 1px solid var(--rule);
+  padding: 16px var(--gutter);
+  z-index: 99;
+  flex-direction: column;
+  gap: 12px;
+}
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-decoration: none;
+  padding: 4px 0;
+}
+.nav-mobile-menu a:hover { color: var(--text-1); }
+
+/* View toggle */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  padding: 2px;
+}
+.view-toggle button {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 10px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-4);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.view-toggle button.active {
+  background: var(--surface-raised);
+  color: var(--text-1);
+}
 
 /* ================================================================
    PAGE CONTAINER
@@ -184,13 +337,8 @@ body {
   padding: 28px 0;
   border-bottom: 1px solid var(--rule);
 }
-.exec-stat {
-  text-align: center;
-  flex: 1;
-}
-.exec-stat + .exec-stat {
-  border-left: 1px solid var(--rule);
-}
+.exec-stat { text-align: center; flex: 1; }
+.exec-stat + .exec-stat { border-left: 1px solid var(--rule); }
 .exec-val {
   font-family: var(--mono);
   font-size: 28px;
@@ -217,9 +365,7 @@ body {
 /* ================================================================
    SECTION HEADERS
    ================================================================ */
-.section {
-  padding-top: 48px;
-}
+.section { padding-top: 48px; }
 .section-header {
   display: flex;
   align-items: baseline;
@@ -242,13 +388,53 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ================================================================
-   RISK TIMELINE
-   ================================================================ */
-.risk-timeline {
-  padding: 20px 0;
-  margin-bottom: 8px;
+/* Section toolbar */
+.section-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
+.expand-all-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.expand-all-btn:hover { border-color: var(--accent); color: var(--text-2); }
+
+/* Active filter indicator */
+.filter-indicator {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding: 6px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent-dim);
+  margin-bottom: 16px;
+}
+.filter-indicator.visible { display: flex; }
+.filter-clear {
+  cursor: pointer;
+  color: var(--text-3);
+  font-weight: 600;
+  transition: color 0.15s;
+}
+.filter-clear:hover { color: var(--text-1); }
+
+/* ================================================================
+   RISK TIMELINE — with animations
+   ================================================================ */
+.risk-timeline { padding: 20px 0; margin-bottom: 8px; }
 .timeline-bars {
   display: flex;
   gap: 2px;
@@ -259,11 +445,24 @@ body {
   flex: 1;
   border-radius: 2px 2px 0 0;
   cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s;
+  transition: opacity 0.15s, filter 0.15s, transform 0.15s;
   opacity: 0.75;
   position: relative;
+  transform-origin: bottom center;
+  animation: growUp 0.6s var(--ease) both;
 }
-.t-bar:hover { opacity: 1; filter: brightness(1.2); }
+.t-bar:hover { opacity: 1; filter: brightness(1.2); transform: scaleY(1.05); }
+.t-bar.flash { animation: barFlash 0.4s ease; }
+
+@keyframes growUp {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 0.75; }
+}
+@keyframes barFlash {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.8); }
+}
+
 .t-bar-tip {
   display: none;
   position: absolute;
@@ -284,11 +483,7 @@ body {
 .t-bar:hover .t-bar-tip { display: block; }
 .t-bar-tip strong { color: var(--text-1); }
 
-.timeline-labels {
-  display: flex;
-  gap: 2px;
-  margin-top: 4px;
-}
+.timeline-labels { display: flex; gap: 2px; margin-top: 4px; }
 .t-label {
   flex: 1;
   text-align: center;
@@ -296,7 +491,6 @@ body {
   font-size: 9px;
   color: var(--text-4);
 }
-
 .timeline-legend {
   display: flex;
   justify-content: center;
@@ -312,33 +506,53 @@ body {
   font-size: 10px;
   color: var(--text-4);
 }
-.legend-dot {
-  width: 8px; height: 8px;
-  border-radius: 2px;
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.risk-scale-header {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  margin-right: 8px;
 }
 
 /* ================================================================
-   SCENE BREAKDOWN SHEET
+   SCENE BREAKDOWN SHEET — collapsible
    ================================================================ */
 .scene-sheet {
   border: 1px solid var(--rule);
   border-radius: 2px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   background: var(--surface);
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.3s, transform 0.4s var(--ease);
+  border-left: 3px solid var(--rule);
 }
-.scene-sheet:hover { border-color: var(--rule-strong); }
+.scene-sheet:hover { border-color: var(--rule-strong); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+.scene-sheet.hidden { display: none; }
+.scene-sheet.dimmed { opacity: 0.3; pointer-events: none; }
 
-/* Scene header — the breakdown strip */
+/* IntersectionObserver fade-in */
+.scene-sheet.animate-in {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.scene-sheet.animate-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Scene header — clickable for collapse */
 .scene-head {
   display: flex;
   align-items: center;
   padding: 14px 24px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--rule);
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
 }
+.scene-head:hover { background: var(--surface-3); }
 .scene-number {
   font-family: var(--mono);
   font-size: 13px;
@@ -356,9 +570,23 @@ body {
 }
 .scene-meta-pills {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
+.scene-head-shots {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-4);
+  transition: transform 0.25s var(--ease);
+  flex-shrink: 0;
+}
+.scene-sheet.collapsed .chevron { transform: rotate(-90deg); }
 .meta-pill {
   font-family: var(--mono);
   font-size: 10px;
@@ -378,18 +606,25 @@ body {
   border: 1px solid;
 }
 
-/* Scene body */
+/* Scene body — collapsible */
+.scene-content {
+  overflow: hidden;
+  max-height: 2000px;
+  transition: max-height 0.4s var(--ease), opacity 0.3s;
+  opacity: 1;
+}
+.scene-sheet.collapsed .scene-content {
+  max-height: 0;
+  opacity: 0;
+}
+
 .scene-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
 }
-.scene-col {
-  padding: 20px 24px;
-}
-.scene-col + .scene-col {
-  border-left: 1px solid var(--rule);
-}
+.scene-col { padding: 20px 24px; }
+.scene-col + .scene-col { border-left: 1px solid var(--rule); }
 
 .field { margin-bottom: 18px; }
 .field:last-child { margin-bottom: 0; }
@@ -407,7 +642,7 @@ body {
   line-height: 1.65;
 }
 
-/* Character tags */
+/* Character tags — interactive */
 .char-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .char-tag {
   font-family: var(--mono);
@@ -418,9 +653,13 @@ body {
   border: 1px solid var(--rule);
   border-radius: 2px;
   color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
 }
+.char-tag:hover { border-color: var(--accent); color: var(--accent); }
+.char-tag.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-/* VFX category pills — muted, desaturated */
+/* VFX category pills — interactive */
 .vfx-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .vfx-tag {
   font-size: 10px;
@@ -431,38 +670,42 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-.vfx-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-}
+.vfx-tag:hover { filter: brightness(1.3); }
+.vfx-tag.active { filter: brightness(1.3); box-shadow: 0 0 6px rgba(201,168,76,0.3); }
+.vfx-dot { width: 5px; height: 5px; border-radius: 50%; }
 
 /* Shot estimate range bar */
 .shot-range { margin-top: 4px; }
 .shot-bar-bg {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: var(--surface-3);
-  border-radius: 2px;
+  border-radius: 3px;
   position: relative;
 }
 .shot-bar-fill {
   position: absolute;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 3px;
   opacity: 0.35;
 }
 .shot-bar-mid {
   position: absolute;
-  width: 2px; height: 8px;
-  top: -2px;
+  width: 8px;
+  height: 8px;
+  top: -1px;
+  margin-left: -4px;
   border-radius: 1px;
   background: var(--accent);
+  transform: rotate(45deg);
 }
 .shot-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 6px;
   font-family: var(--mono);
   font-size: 10px;
   color: var(--text-4);
@@ -534,6 +777,58 @@ body {
 }
 
 /* ================================================================
+   TABLE VIEW
+   ================================================================ */
+.table-view { display: none; overflow-x: auto; }
+.table-view.active { display: block; }
+.card-view.hidden { display: none; }
+
+.scene-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.scene-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--rule-strong);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.scene-table th:hover { color: var(--text-1); }
+.scene-table th.sorted { color: var(--accent); }
+.scene-table th .sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 8px;
+  vertical-align: middle;
+}
+.scene-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--text-2);
+  vertical-align: top;
+}
+.scene-table tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.scene-table tr:hover { background: var(--surface-2); }
+.scene-table .risk-cell {
+  font-family: var(--mono);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ================================================================
    HIDDEN COST ITEMS
    ================================================================ */
 .cost-item {
@@ -544,7 +839,6 @@ body {
   align-items: flex-start;
 }
 .cost-item:last-child { border-bottom: none; }
-
 .cost-sev-badge {
   font-family: var(--mono);
   font-size: 16px;
@@ -576,6 +870,20 @@ body {
   color: var(--text-4);
   margin-top: 6px;
 }
+.severity-header {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.severity-header span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
 /* ================================================================
    KEY QUESTIONS
@@ -589,7 +897,6 @@ body {
   margin-bottom: 12px;
   font-style: italic;
 }
-
 .q-item {
   display: flex;
   gap: 14px;
@@ -598,7 +905,6 @@ body {
   align-items: flex-start;
 }
 .q-item:last-child { border-bottom: none; }
-
 .q-marker {
   font-family: var(--serif);
   font-size: 16px;
@@ -639,6 +945,31 @@ body {
 }
 
 /* ================================================================
+   BACK TO TOP
+   ================================================================ */
+.back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--rule-strong);
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s, transform 0.3s, background 0.15s;
+  z-index: 50;
+}
+.back-to-top.visible { opacity: 1; transform: translateY(0); }
+.back-to-top:hover { background: var(--surface-3); color: var(--text-1); }
+
+/* ================================================================
    RESPONSIVE
    ================================================================ */
 @media (max-width: 768px) {
@@ -650,21 +981,44 @@ body {
   .exec-stat + .exec-stat { border-left: none; }
   .title-block h1 { font-size: 26px; }
   .title-meta { flex-wrap: wrap; justify-content: center; gap: 12px; }
-  .nav-links { gap: 14px; }
+
+  .nav-links, .nav-search, .jump-dropdown, .view-toggle { display: none; }
+  .nav-hamburger { display: flex; }
+  .nav-mobile-menu a.active { color: var(--accent); }
+
+  .timeline-bars { overflow-x: auto; min-width: 0; }
+  .t-bar { min-width: 18px; }
+  .timeline-labels { overflow-x: auto; }
+  .t-label { min-width: 18px; }
+
+  .scene-table { font-size: 11px; }
 }
 
 /* ================================================================
    PRINT
    ================================================================ */
 @media print {
-  .nav { display: none; }
+  .nav, .back-to-top, .nav-mobile-menu { display: none !important; }
   .page { padding-top: 0; }
   body { background: #fff; color: #222; }
-  .scene-sheet { break-inside: avoid; border-color: #ddd; }
+  .scene-sheet {
+    break-inside: avoid;
+    border-color: #ddd;
+    border-left-width: 1px;
+  }
+  .scene-sheet.collapsed .scene-content { max-height: none; opacity: 1; }
   .scene-head { background: #f5f5f0; }
   .title-block h1 { color: #111; }
   .field-text, .cost-desc, .q-text { color: #333; }
   .t-bar-tip { display: none !important; }
+  .chevron { display: none; }
+  .filter-indicator, .section-toolbar { display: none !important; }
+  .search-count { display: none !important; }
+  .view-toggle { display: none !important; }
+  .table-view { display: none !important; }
+  .card-view.hidden { display: block !important; }
+  .scene-sheet.dimmed { opacity: 1; pointer-events: auto; }
+  .scene-sheet.hidden { display: block; }
 }
 </style>
 </head>
@@ -680,8 +1034,26 @@ body {
       <a href="#costs">Hidden Costs</a>
       <a href="#questions">Questions</a>
     </div>
+    <div class="nav-search">
+      <svg class="nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search scenes..." />
+    </div>
+    <span class="search-count" id="searchCount"></span>
+    <div class="jump-dropdown">
+      <button class="jump-btn" id="jumpBtn">Jump to Scene ▾</button>
+      <div class="jump-menu" id="jumpMenu"></div>
+    </div>
+    <div class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 </nav>
+<div class="nav-mobile-menu" id="mobileMenu">
+  <a href="#summary" onclick="closeMobileMenu()">Summary</a>
+  <a href="#scenes" onclick="closeMobileMenu()">Scenes</a>
+  <a href="#costs" onclick="closeMobileMenu()">Hidden Costs</a>
+  <a href="#questions" onclick="closeMobileMenu()">Questions</a>
+</div>
 
 <!-- ===== PAGE ===== -->
 <div class="page">
@@ -714,11 +1086,12 @@ body {
       <div class="timeline-bars" id="timelineBars"></div>
       <div class="timeline-labels" id="timelineLabels"></div>
       <div class="timeline-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r1)"></div>Minimal</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r2)"></div>Mild</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r3)"></div>Moderate</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r4)"></div>High</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r5)"></div>Critical</div>
+        <span class="risk-scale-header">Risk Scale:</span>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r1)"></div>1 Minimal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r2)"></div>2 Mild</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r3)"></div>3 Moderate</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r4)"></div>4 High</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r5)"></div>5 Critical</div>
       </div>
     </div>
   </div>
@@ -728,8 +1101,36 @@ body {
     <div class="section-header">
       <span class="section-num">II.</span>
       <h2 class="section-title">Scene Breakdowns</h2>
+      <div class="section-toolbar">
+        <div class="view-toggle">
+          <button class="active" id="cardViewBtn" onclick="setView('card')">Cards</button>
+          <button id="tableViewBtn" onclick="setView('table')">Table</button>
+        </div>
+        <button class="expand-all-btn" id="expandAllBtn" onclick="toggleExpandAll()">Expand All</button>
+      </div>
     </div>
-    <div id="sceneSheets"></div>
+    <div class="filter-indicator" id="filterIndicator">
+      <span id="filterText"></span>
+      <span class="filter-clear" onclick="clearFilter()">✕ Clear</span>
+    </div>
+    <div class="card-view" id="cardView">
+      <div id="sceneSheets"></div>
+    </div>
+    <div class="table-view" id="tableView">
+      <table class="scene-table" id="sceneTable">
+        <thead>
+          <tr>
+            <th data-sort="id" onclick="sortTable('id')">ID <span class="sort-arrow"></span></th>
+            <th data-sort="slug" onclick="sortTable('slug')">Slugline <span class="sort-arrow"></span></th>
+            <th data-sort="cr" onclick="sortTable('cr')">Cost <span class="sort-arrow"></span></th>
+            <th data-sort="sr" onclick="sortTable('sr')">Sched <span class="sort-arrow"></span></th>
+            <th data-sort="shots" onclick="sortTable('shots')">Shots <span class="sort-arrow"></span></th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- HIDDEN COSTS -->
@@ -737,6 +1138,12 @@ body {
     <div class="section-header">
       <span class="section-num">III.</span>
       <h2 class="section-title">Hidden Cost Radar</h2>
+    </div>
+    <div class="severity-header">
+      <span><span class="legend-dot" style="background:var(--r5);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 5 Critical</span>
+      <span><span class="legend-dot" style="background:var(--r4);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 4 High</span>
+      <span><span class="legend-dot" style="background:var(--r3);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 3 Medium</span>
+      <span><span class="legend-dot" style="background:var(--r1);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 1 Low</span>
     </div>
     <div id="costItems"></div>
   </div>
@@ -756,6 +1163,11 @@ body {
   </div>
 
 </div>
+
+<!-- Back to top -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
 
 <script>
 // ================================================================
@@ -823,9 +1235,27 @@ const QS = [
 ];
 
 // ================================================================
+// STATE
+// ================================================================
+let allExpanded = false;
+let currentView = 'card';
+let activeFilter = null;       // {type:'char'|'cat', value:'...'}
+let searchQuery = '';
+let sortState = { col: null, asc: true };
+
+// ================================================================
+// UTILITIES
+// ================================================================
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+function esc(s) {
+  if (typeof s !== 'string') return String(s ?? '');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ================================================================
 // RENDER FUNCTIONS
 // ================================================================
-
 function renderExecSummary() {
   const totalShots = S.reduce((a,s) => a + s.shots.l, 0);
   const vfxScenes = S.filter(s => s.cats.length > 0).length;
@@ -835,46 +1265,25 @@ function renderExecSummary() {
   const high = S.filter(s => s.cr >= 4).length;
 
   document.getElementById('execSummary').innerHTML = `
-    <div class="exec-stat">
-      <div class="exec-val">${S.length}</div>
-      <div class="exec-label">Scenes</div>
-      <div class="exec-note">${vfxScenes} with VFX</div>
-    </div>
-    <div class="exec-stat">
-      <div class="exec-val">${totalShots}</div>
-      <div class="exec-label">Est. VFX Shots</div>
-      <div class="exec-note">${minShots}–${maxShots} range</div>
-    </div>
-    <div class="exec-stat">
-      <div class="exec-val" style="color:${RC_HEX[Math.round(parseFloat(avgCost))]}">${avgCost}</div>
-      <div class="exec-label">Avg Cost Risk</div>
-      <div class="exec-note">1–5 scale</div>
-    </div>
-    <div class="exec-stat">
-      <div class="exec-val" style="color:${RC_HEX[5]}">${high}</div>
-      <div class="exec-label">High Risk Scenes</div>
-      <div class="exec-note">cost ≥ 4</div>
-    </div>
-  `;
+    <div class="exec-stat"><div class="exec-val">${S.length}</div><div class="exec-label">Scenes</div><div class="exec-note">${vfxScenes} with VFX</div></div>
+    <div class="exec-stat"><div class="exec-val">${totalShots}</div><div class="exec-label">Est. VFX Shots</div><div class="exec-note">${minShots}–${maxShots} range</div></div>
+    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[clamp(Math.round(parseFloat(avgCost)),1,5)]}">${avgCost}</div><div class="exec-label">Avg Cost Risk</div><div class="exec-note">1–5 scale</div></div>
+    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[5]}">${high}</div><div class="exec-label">High Risk Scenes</div><div class="exec-note">cost ≥ 4</div></div>`;
 }
 
 function renderTimeline() {
   const bars = document.getElementById('timelineBars');
   const labels = document.getElementById('timelineLabels');
 
-  bars.innerHTML = S.map(s => {
+  bars.innerHTML = S.map((s, i) => {
     const pct = 20 + (s.cr / 5) * 80;
     const loc = s.slug.split('—')[1]?.trim() || s.slug;
-    return `<div class="t-bar" style="height:${pct}%;background:${RC[s.cr]}">
-      <div class="t-bar-tip">
-        <strong>Scene ${s.id}</strong><br>
-        ${loc}<br>
-        Cost ${s.cr}/5 · Sched ${s.sr}/5 · ${s.shots.l} shots
-      </div>
+    return `<div class="t-bar" data-scene="${s.id}" style="height:${pct}%;background:${RC[s.cr]};animation-delay:${i*0.04}s" onclick="jumpToScene('${s.id}')">
+      <div class="t-bar-tip"><strong>Scene ${esc(s.id)}</strong><br>${esc(loc)}<br>Cost ${s.cr}/5 · Sched ${s.sr}/5 · ${s.shots.l} shots</div>
     </div>`;
   }).join('');
 
-  labels.innerHTML = S.map(s => `<div class="t-label">${s.id}</div>`).join('');
+  labels.innerHTML = S.map(s => `<div class="t-label">${esc(s.id)}</div>`).join('');
 }
 
 function renderScenes() {
@@ -885,132 +1294,367 @@ function renderScenes() {
     const rangeL = (s.shots.min / maxShots) * 100;
     const rangeW = ((s.shots.max - s.shots.min) / maxShots) * 100;
     const likelyP = (s.shots.l / maxShots) * 100;
+    const borderColor = RC_HEX[clamp(s.cr,1,5)];
 
     const chars = s.ch.length
-      ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${s.ch.map(c => `<span class="char-tag">${c}</span>`).join('')}</div></div>`
+      ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${s.ch.map(c => `<span class="char-tag" onclick="event.stopPropagation();filterBy('char','${esc(c)}')">${esc(c)}</span>`).join('')}</div></div>`
       : '';
 
     const cats = s.cats.length
       ? `<div class="field"><div class="field-label">VFX Categories</div><div class="vfx-tags">${s.cats.map(c => {
           const col = CC[c] || '#888';
-          return `<span class="vfx-tag" style="color:${col};border-color:${col}40;background:${col}0a"><span class="vfx-dot" style="background:${col}"></span>${CL[c]||c}</span>`;
+          return `<span class="vfx-tag" onclick="event.stopPropagation();filterBy('cat','${esc(c)}')" style="color:${col};border-color:${col}40;background:${col}0a"><span class="vfx-dot" style="background:${col}"></span>${esc(CL[c]||c)}</span>`;
         }).join('')}</div></div>`
       : '';
 
     const flags = Object.entries(FN).map(([k,v]) =>
-      `<span class="s-flag${s.flags[k] ? ' on' : ''}">${v}</span>`
+      `<span class="s-flag${s.flags[k] ? ' on' : ''}">${esc(v)}</span>`
     ).join('');
 
     return `
-    <div class="scene-sheet" id="scene-${s.id}">
-      <div class="scene-head">
-        <span class="scene-number">${s.id}</span>
-        <span class="scene-slug">${s.slug}</span>
+    <div class="scene-sheet collapsed animate-in" id="scene-${esc(s.id)}" data-scene="${esc(s.id)}" style="border-left-color:${borderColor}">
+      <div class="scene-head" onclick="toggleScene('${esc(s.id)}')">
+        <span class="scene-number">${esc(s.id)}</span>
+        <span class="scene-slug">${esc(s.slug)}</span>
         <div class="scene-meta-pills">
-          <span class="meta-pill">${s.ie}</span>
-          <span class="meta-pill">${s.dn}</span>
+          <span class="meta-pill">${esc(s.ie)}</span>
+          <span class="meta-pill">${esc(s.dn)}</span>
           <span class="meta-pill">${s.pg} pg</span>
           <span class="risk-badge" style="color:${RC[s.cr]};border-color:${RC[s.cr]};background:${RC[s.cr]}0a">COST ${s.cr}/5</span>
           <span class="risk-badge" style="color:${RC[s.sr]};border-color:${RC[s.sr]};background:${RC[s.sr]}0a">SCHED ${s.sr}/5</span>
+          <span class="scene-head-shots">${s.shots.l} shots</span>
         </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <div class="scene-body">
-        <div class="scene-col">
-          <div class="field">
-            <div class="field-label">Summary</div>
-            <div class="field-text">${s.sum}</div>
-          </div>
-          ${chars}
-          ${cats}
-          <div class="field">
-            <div class="field-label">VFX Shot Estimate</div>
-            <div class="shot-range">
-              <div class="shot-bar-bg">
-                <div class="shot-bar-fill" style="left:${rangeL}%;width:${rangeW}%;background:${RC[s.cr]}"></div>
-                <div class="shot-bar-mid" style="left:${likelyP}%"></div>
+      <div class="scene-content">
+        <div class="scene-body">
+          <div class="scene-col">
+            <div class="field"><div class="field-label">Summary</div><div class="field-text">${esc(s.sum)}</div></div>
+            ${chars}
+            ${cats}
+            <div class="field">
+              <div class="field-label">VFX Shot Estimate</div>
+              <div class="shot-range">
+                <div class="shot-bar-bg">
+                  <div class="shot-bar-fill" style="left:${rangeL}%;width:${rangeW}%;background:${RC[s.cr]}"></div>
+                  <div class="shot-bar-mid" style="left:${likelyP}%"></div>
+                </div>
+                <div class="shot-labels"><span>${s.shots.min}</span><span class="likely">${s.shots.l} likely</span><span>${s.shots.max}</span></div>
               </div>
-              <div class="shot-labels"><span>${s.shots.min}</span><span class="likely">${s.shots.l} likely</span><span>${s.shots.max}</span></div>
             </div>
           </div>
-        </div>
-        <div class="scene-col">
-          <div class="field">
-            <div class="field-label">Risk Reasons</div>
-            <ul class="reason-list">${s.reasons.map(r => `<li><span class="reason-bullet"></span>${r}</li>`).join('')}</ul>
-          </div>
-          <div class="field">
-            <div class="field-label">Suggested Capture</div>
-            <div class="callout callout-capture">${s.capture}</div>
-          </div>
-          <div class="field">
-            <div class="field-label">Notes for Producer</div>
-            <div class="callout callout-notes">${s.notes}</div>
+          <div class="scene-col">
+            <div class="field"><div class="field-label">Risk Reasons</div><ul class="reason-list">${s.reasons.map(r => `<li><span class="reason-bullet"></span>${esc(r)}</li>`).join('')}</ul></div>
+            <div class="field"><div class="field-label">Suggested Capture</div><div class="callout callout-capture">${esc(s.capture)}</div></div>
+            <div class="field"><div class="field-label">Notes for Producer</div><div class="callout callout-notes">${esc(s.notes)}</div></div>
           </div>
         </div>
+        <div class="scene-flags">${flags}</div>
       </div>
-      <div class="scene-flags">${flags}</div>
     </div>`;
   }).join('');
 }
 
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const sorted = [...S];
+
+  if (sortState.col) {
+    sorted.sort((a,b) => {
+      let va, vb;
+      switch(sortState.col) {
+        case 'id': va = parseInt(a.id); vb = parseInt(b.id); break;
+        case 'slug': va = a.slug; vb = b.slug; break;
+        case 'cr': va = a.cr; vb = b.cr; break;
+        case 'sr': va = a.sr; vb = b.sr; break;
+        case 'shots': va = a.shots.l; vb = b.shots.l; break;
+        default: return 0;
+      }
+      if (va < vb) return sortState.asc ? -1 : 1;
+      if (va > vb) return sortState.asc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  tbody.innerHTML = sorted.map(s => `
+    <tr onclick="setView('card');setTimeout(()=>jumpToScene('${esc(s.id)}'),100)">
+      <td style="font-family:var(--mono);font-weight:600">${esc(s.id)}</td>
+      <td style="font-family:var(--mono);font-size:11px">${esc(s.slug)}</td>
+      <td class="risk-cell" style="color:${RC_HEX[clamp(s.cr,1,5)]}">${s.cr}</td>
+      <td class="risk-cell" style="color:${RC_HEX[clamp(s.sr,1,5)]}">${s.sr}</td>
+      <td style="font-family:var(--mono);text-align:center">${s.shots.l}</td>
+      <td><div class="vfx-tags">${s.cats.map(c => {
+        const col = CC[c]||'#888';
+        return `<span class="vfx-tag" style="color:${col};border-color:${col}40;background:${col}0a;cursor:default;font-size:9px;padding:1px 6px"><span class="vfx-dot" style="background:${col}"></span>${esc(CL[c]||c)}</span>`;
+      }).join('')}</div></td>
+    </tr>
+  `).join('');
+}
+
 function renderCosts() {
   const sevColors = { 5: RC_HEX[5], 4: RC_HEX[4], 3: RC_HEX[3], 2: RC_HEX[2], 1: RC_HEX[1] };
-
   document.getElementById('costItems').innerHTML = COSTS.map(c => {
     const col = sevColors[c.sev] || RC_HEX[3];
-    return `
-    <div class="cost-item">
-      <div class="cost-sev-badge" style="color:${col};border-color:${col}30;background:${col}0a">${c.sev}</div>
-      <div class="cost-content">
-        <div class="cost-title">${c.title}</div>
-        <div class="cost-desc">${c.desc}</div>
-        <div class="cost-affected">Affects: ${c.aff}</div>
-      </div>
-    </div>`;
+    return `<div class="cost-item"><div class="cost-sev-badge" style="color:${col};border-color:${col}30;background:${col}0a">${c.sev}</div><div class="cost-content"><div class="cost-title">${esc(c.title)}</div><div class="cost-desc">${esc(c.desc)}</div><div class="cost-affected">Affects: ${esc(c.aff)}</div></div></div>`;
   }).join('');
 }
 
 function renderQuestions() {
   const byDept = {};
-  QS.forEach(q => {
-    if (!byDept[q.dept]) byDept[q.dept] = [];
-    byDept[q.dept].push(q);
-  });
-
+  QS.forEach(q => { if (!byDept[q.dept]) byDept[q.dept] = []; byDept[q.dept].push(q); });
   const pc = { critical: RC_HEX[5], high: RC_HEX[4], medium: RC_HEX[3], low: RC_HEX[1] };
 
   document.getElementById('questionItems').innerHTML = Object.entries(byDept).map(([dept, qs]) => `
-    <div class="q-group">
-      <div class="q-group-label">For the ${dept}</div>
-      ${qs.map((q, i) => `
-        <div class="q-item">
-          <span class="q-marker">${i + 1}.</span>
-          <div class="q-text">${q.t}</div>
-          <span class="q-priority" style="color:${pc[q.p]};border-color:${pc[q.p]}30;background:${pc[q.p]}0a">${q.p}</span>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+    <div class="q-group"><div class="q-group-label">For the ${esc(dept)}</div>
+    ${qs.map((q, i) => `<div class="q-item"><span class="q-marker">${i+1}.</span><div class="q-text">${esc(q.t)}</div><span class="q-priority" style="color:${pc[q.p]};border-color:${pc[q.p]}30;background:${pc[q.p]}0a">${esc(q.p)}</span></div>`).join('')}
+    </div>`).join('');
+}
+
+function renderJumpMenu() {
+  const menu = document.getElementById('jumpMenu');
+  menu.innerHTML = S.map(s => {
+    const col = RC_HEX[clamp(s.cr,1,5)];
+    const loc = s.slug.split('—')[1]?.trim() || s.slug;
+    return `<div class="jump-item" onclick="jumpToScene('${esc(s.id)}');closeJumpMenu()">
+      <span class="jump-item-dot" style="background:${col}"></span>
+      <span class="jump-item-id">${esc(s.id)}</span>
+      <span class="jump-item-slug">${esc(loc)}</span>
+    </div>`;
+  }).join('');
 }
 
 // ================================================================
-// NAV SCROLL HIGHLIGHTING
+// INTERACTIONS
+// ================================================================
+function toggleScene(id) {
+  const el = document.getElementById('scene-' + id);
+  if (el) el.classList.toggle('collapsed');
+  updateExpandBtn();
+}
+
+function toggleExpandAll() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.scene-sheet').forEach(el => {
+    el.classList.toggle('collapsed', !allExpanded);
+  });
+  updateExpandBtn();
+}
+
+function updateExpandBtn() {
+  const total = document.querySelectorAll('.scene-sheet').length;
+  const collapsed = document.querySelectorAll('.scene-sheet.collapsed').length;
+  allExpanded = collapsed === 0;
+  document.getElementById('expandAllBtn').textContent = allExpanded ? 'Collapse All' : 'Expand All';
+}
+
+function jumpToScene(id) {
+  const el = document.getElementById('scene-' + id);
+  if (!el) return;
+
+  // Expand if collapsed
+  el.classList.remove('collapsed');
+  updateExpandBtn();
+
+  // Scroll to it
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Flash the timeline bar
+  const bar = document.querySelector(`.t-bar[data-scene="${id}"]`);
+  if (bar) {
+    bar.classList.add('flash');
+    setTimeout(() => bar.classList.remove('flash'), 400);
+  }
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('cardViewBtn').classList.toggle('active', view === 'card');
+  document.getElementById('tableViewBtn').classList.toggle('active', view === 'table');
+  document.getElementById('cardView').classList.toggle('hidden', view !== 'card');
+  document.getElementById('tableView').classList.toggle('active', view === 'table');
+  if (view === 'table') renderTable();
+}
+
+function sortTable(col) {
+  if (sortState.col === col) {
+    sortState.asc = !sortState.asc;
+  } else {
+    sortState.col = col;
+    sortState.asc = true;
+  }
+
+  // Update header arrows
+  document.querySelectorAll('.scene-table th').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    th.classList.remove('sorted');
+    if (arrow) arrow.textContent = '';
+    if (th.dataset.sort === col) {
+      th.classList.add('sorted');
+      if (arrow) arrow.textContent = sortState.asc ? '▲' : '▼';
+    }
+  });
+
+  renderTable();
+}
+
+// ================================================================
+// FILTERING
+// ================================================================
+function filterBy(type, value) {
+  if (activeFilter && activeFilter.type === type && activeFilter.value === value) {
+    clearFilter();
+    return;
+  }
+  activeFilter = { type, value };
+  applyFilter();
+}
+
+function clearFilter() {
+  activeFilter = null;
+  applyFilter();
+}
+
+function applyFilter() {
+  const indicator = document.getElementById('filterIndicator');
+  const filterText = document.getElementById('filterText');
+
+  if (!activeFilter) {
+    indicator.classList.remove('visible');
+    document.querySelectorAll('.scene-sheet').forEach(el => {
+      el.classList.remove('dimmed');
+    });
+    // Reset pill styles
+    document.querySelectorAll('.char-tag, .vfx-tag').forEach(el => el.classList.remove('active'));
+    return;
+  }
+
+  const label = activeFilter.type === 'char' ? `Character: ${activeFilter.value}` : `Category: ${CL[activeFilter.value] || activeFilter.value}`;
+  filterText.textContent = `Filtering by ${label}`;
+  indicator.classList.add('visible');
+
+  // Update pill styles
+  document.querySelectorAll('.char-tag').forEach(el => {
+    el.classList.toggle('active', activeFilter.type === 'char' && el.textContent.trim() === activeFilter.value);
+  });
+  document.querySelectorAll('.vfx-tag').forEach(el => {
+    const catName = el.textContent.trim();
+    el.classList.toggle('active', activeFilter.type === 'cat' && (CL[activeFilter.value] || activeFilter.value) === catName);
+  });
+
+  // Dim non-matching scenes
+  S.forEach(s => {
+    const el = document.getElementById('scene-' + s.id);
+    if (!el) return;
+    let match = false;
+    if (activeFilter.type === 'char') {
+      match = s.ch.includes(activeFilter.value);
+    } else if (activeFilter.type === 'cat') {
+      match = s.cats.includes(activeFilter.value);
+    }
+    el.classList.toggle('dimmed', !match);
+  });
+}
+
+// ================================================================
+// SEARCH
+// ================================================================
+function handleSearch(query) {
+  searchQuery = query.toLowerCase().trim();
+  const counter = document.getElementById('searchCount');
+
+  if (!searchQuery) {
+    counter.classList.remove('visible');
+    document.querySelectorAll('.scene-sheet').forEach(el => el.classList.remove('hidden'));
+    return;
+  }
+
+  let visible = 0;
+  S.forEach(s => {
+    const el = document.getElementById('scene-' + s.id);
+    if (!el) return;
+    const text = [s.slug, s.sum, ...s.ch, ...s.reasons, s.capture, s.notes, ...s.cats.map(c => CL[c]||c)].join(' ').toLowerCase();
+    const match = text.includes(searchQuery);
+    el.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+
+  counter.textContent = `${visible} of ${S.length}`;
+  counter.classList.add('visible');
+}
+
+// ================================================================
+// NAV
 // ================================================================
 function updateNav() {
-  const sections = ['summary', 'scenes', 'costs', 'questions'];
-  const scrollY = window.scrollY + 100;
-
+  const sections = ['summary','scenes','costs','questions'];
+  const y = window.scrollY + 100;
   let active = 'summary';
   for (const id of sections) {
     const el = document.getElementById(id);
-    if (el && el.offsetTop <= scrollY) active = id;
+    if (el && el.offsetTop <= y) active = id;
   }
-
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === '#' + active);
   });
+  // Mobile menu
+  document.querySelectorAll('.nav-mobile-menu a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + active);
+  });
 }
-window.addEventListener('scroll', updateNav, { passive: true });
+
+// Back to top
+function updateBackToTop() {
+  document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
+}
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+
+// Jump menu
+document.getElementById('jumpBtn').addEventListener('click', function() {
+  document.getElementById('jumpMenu').classList.toggle('open');
+});
+function closeJumpMenu() {
+  document.getElementById('jumpMenu').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.jump-dropdown')) closeJumpMenu();
+});
+
+// Search input
+document.getElementById('searchInput').addEventListener('input', function() {
+  handleSearch(this.value);
+});
+
+// Scroll listeners
+window.addEventListener('scroll', function() {
+  updateNav();
+  updateBackToTop();
+}, { passive: true });
+
+// ================================================================
+// INTERSECTION OBSERVER — fade-in animation
+// ================================================================
+function setupObserver() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+}
 
 // ================================================================
 // INIT
@@ -1020,6 +1664,9 @@ renderTimeline();
 renderScenes();
 renderCosts();
 renderQuestions();
+renderJumpMenu();
+setupObserver();
+updateExpandBtn();
 </script>
 </body>
 </html>
