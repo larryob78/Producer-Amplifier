@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Napkin — Producer Amplifier</title>
+<title>Napkin â Producer Amplifier</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ================================================================
-   PRODUCTION BIBLE — Design System v2
-   Warm dark palette · collapsible scenes · search · filters
+   PRODUCTION BIBLE â Design System v2
+   Warm dark palette Â· collapsible scenes Â· search Â· filters
    ================================================================ */
 
 :root {
@@ -24,7 +24,7 @@
   --rule-strong: rgba(255,245,230,0.12);
   --rule-accent: rgba(255,245,230,0.18);
 
-  /* Text — improved contrast */
+  /* Text â improved contrast */
   --text-1: #e8e4de;
   --text-2: #b0a99e;
   --text-3: #948d82;
@@ -479,7 +479,7 @@ body {
 .filter-clear:hover { color: var(--text-1); }
 
 /* ================================================================
-   RISK TIMELINE — with animations
+   RISK TIMELINE â with animations
    ================================================================ */
 .risk-timeline { padding: 20px 0; margin-bottom: 8px; }
 .timeline-bars {
@@ -562,7 +562,7 @@ body {
 }
 
 /* ================================================================
-   SCENE BREAKDOWN SHEET — collapsible
+   SCENE BREAKDOWN SHEET â collapsible
    ================================================================ */
 .scene-sheet {
   border: 1px solid var(--rule);
@@ -586,7 +586,7 @@ body {
   transform: translateY(0);
 }
 
-/* Scene header — clickable for collapse */
+/* Scene header â clickable for collapse */
 .scene-head {
   display: flex;
   align-items: center;
@@ -653,7 +653,7 @@ body {
   border: 1px solid;
 }
 
-/* Scene body — collapsible */
+/* Scene body â collapsible */
 .scene-content {
   overflow: hidden;
   max-height: 2000px;
@@ -689,7 +689,7 @@ body {
   line-height: 1.65;
 }
 
-/* Character tags — interactive */
+/* Character tags â interactive */
 .char-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .char-tag {
   font-family: var(--mono);
@@ -706,7 +706,7 @@ body {
 .char-tag:hover { border-color: var(--accent); color: var(--accent); }
 .char-tag.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-/* VFX category pills — interactive */
+/* VFX category pills â interactive */
 .vfx-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .vfx-tag {
   font-size: 10px;
@@ -1129,6 +1129,7 @@ body {
   .scene-sheet.hidden { display: block; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 
@@ -1148,11 +1149,11 @@ body {
     </div>
     <span class="search-count" id="searchCount"></span>
     <div class="jump-dropdown">
-      <button class="jump-btn" id="jumpBtn">Jump to Scene ▾</button>
+      <button class="jump-btn" id="jumpBtn">Jump to Scene â¾</button>
       <div class="jump-menu" id="jumpMenu"></div>
     </div>
-    <button class="load-json-btn" id="loadJsonBtn" onclick="document.getElementById('jsonFileInput').click()">Load JSON</button>
-    <input type="file" id="jsonFileInput" accept=".json" style="display:none" />
+    <button class="load-json-btn" id="loadJsonBtn" onclick="document.getElementById('jsonFileInput').click()">Upload Script</button>
+    <input type="file" id="jsonFileInput" accept=".json,.docx,.doc,.txt,.pdf,.fdx,.fountain,.rtf" style="display:none" />
     <div class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()">
       <span></span><span></span><span></span>
     </div>
@@ -1162,8 +1163,8 @@ body {
 <div class="drop-overlay" id="dropOverlay">
   <div class="drop-overlay-inner">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <div class="drop-text">Drop JSON file here</div>
-    <div class="drop-hint">BreakdownOutput JSON from Napkin</div>
+    <div class="drop-text">Drop script file here</div>
+    <div class="drop-hint">Word Doc, PDF, Final Draft, Text, or JSON</div>
   </div>
 </div>
 <div class="nav-mobile-menu" id="mobileMenu">
@@ -1230,7 +1231,7 @@ body {
     </div>
     <div class="filter-indicator" id="filterIndicator">
       <span id="filterText"></span>
-      <span class="filter-clear" onclick="clearFilter()">✕ Clear</span>
+      <span class="filter-clear" onclick="clearFilter()">â Clear</span>
     </div>
     <div class="card-view" id="cardView">
       <div id="sceneSheets"></div>
@@ -1278,7 +1279,7 @@ body {
 
   <!-- FOOTER -->
   <div class="doc-footer">
-    Generated by Napkin · Producer Amplifier · claude-opus-4.6 · 2026-02-14
+    Generated by Napkin Â· Producer Amplifier Â· claude-opus-4.6 Â· 2026-02-14
   </div>
 
 </div>
@@ -1314,18 +1315,18 @@ const FN = {
 };
 
 let S = [
-  {id:"1",slug:"INT. ABANDONED WAREHOUSE — NIGHT",ie:"INT",dn:"NIGHT",pg:"3 2/8",ch:["DETECTIVE REYES","OFFICER CHEN","SWAT TEAM"],cats:["destruction_damage","weapons_combat","fire_pyro"],cr:5,sr:4,shots:{min:14,l:22,max:32},sum:"SWAT team breaches a warehouse rigged with explosives. Massive fireball blows out the second floor. Reyes narrowly escapes through collapsing scaffolding.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Large-scale practical explosion with CG enhancement","Collapsing scaffolding rig (mechanical + CG extension)","Fire stunt coordination — 8+ performers","Confined space pyro safety protocols"],capture:"Pre-rig warehouse for controlled pyro charges. Shoot collapse practically with CG extension for upper floors. Multiple safety takes.",notes:"Hero explosion — sets visual tone for entire film. Budget for 2 full rehearsals + 3 takes."},
-  {id:"2",slug:"EXT. MOUNTAIN HIGHWAY — DAY",ie:"EXT",dn:"DAY",pg:"4 4/8",ch:["MAYA","DRIVER","HELICOPTER PILOT"],cats:["vehicles_mech","aerial_height","destruction_damage"],cr:5,sr:5,shots:{min:20,l:35,max:50},sum:"High-speed car chase along cliff-edge highway. Helicopter pursuit. Lead car clips barrier and tumbles off the edge — hero shot of the fall.",flags:{blue_green_screen:0,water_work:0,aerial_drone:1,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:1},reasons:["Precision stunt driving at speed","Helicopter aerial coordination","CG cliff extension and car tumble","Road closure permits + multi-unit logistics","Weather-dependent mountain shooting"],capture:"Practical driving stunts with stunt doubles. CG takeover for cliff fall. Drone + helicopter for aerials. 2 camera cars.",notes:"Most complex action sequence. Pre-vis every shot. Lock road permits 8 weeks out. Stunt coordinator needs 3 days rehearsal."},
-  {id:"3",slug:"INT. UNDERWATER RESEARCH LAB — NIGHT",ie:"INT",dn:"NIGHT",pg:"2 6/8",ch:["DR. VASQUEZ","TECH WILSON","LAB CREW"],cats:["water_work","digital_augmentation","destruction_damage"],cr:4,sr:4,shots:{min:8,l:14,max:20},sum:"Pressure breach floods the lab. Water pours through cracking observation windows. Emergency lights strobe as crew scrambles for the airlock.",flags:{blue_green_screen:1,water_work:1,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical water dump rigs + CG water enhancement","Cracking glass FX (practical breakaway + CG)","Underwater tank work for exterior shots","Actor safety in rising water levels"],capture:"Build practical lab set over water tank. Controlled water dump from overhead rigs. CG water extension for volume. Breakaway glass for hero crack shot.",notes:"Water work always overruns — budget 50% more time. Safety divers on standby. Waterproof all electronics."},
-  {id:"4",slug:"EXT. CITY ROOFTOP — DUSK",ie:"EXT",dn:"DUSK",pg:"2/8",ch:["DETECTIVE REYES","MAYA"],cats:["aerial_height","weather_atmosphere","digital_augmentation"],cr:3,sr:4,shots:{min:4,l:8,max:12},sum:"Reyes confronts Maya on a rooftop at sunset. City skyline behind them. She steps onto the ledge — he talks her back.",flags:{blue_green_screen:1,water_work:0,aerial_drone:1,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:0},reasons:["Narrow golden hour shooting window","Green screen skyline extension","Drone establishing shots","Fall safety rigging for ledge work"],capture:"Shoot on practical rooftop with green screen for skyline. Drone flyover for establishing shot. Safety wire for ledge scenes.",notes:"Emotional climax — performances matter more than VFX. Schedule 3 sunset attempts. Wire safety non-negotiable."},
-  {id:"5",slug:"INT. POLICE PRECINCT — DAY",ie:"INT",dn:"DAY",pg:"3/8",ch:["DETECTIVE REYES","CAPTAIN OKAFOR","OFFICER CHEN"],cats:[],cr:1,sr:1,shots:{min:0,l:1,max:2},sum:"Reyes briefs the team on the warehouse raid. Tension with Captain Okafor over jurisdiction. Standard dialogue scene.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Minimal VFX — monitor screen inserts only"],capture:"Standard coverage. Shoot monitor graphics separately for compositing.",notes:"Character development scene. No VFX concerns beyond screen inserts."},
-  {id:"6",slug:"EXT. HARBOR DOCKS — NIGHT",ie:"EXT",dn:"NIGHT",pg:"4/8",ch:["DETECTIVE REYES","MAYA","ARMED GUARDS","DOCK WORKERS"],cats:["weapons_combat","crowd_extras","weather_atmosphere"],cr:4,sr:3,shots:{min:10,l:16,max:24},sum:"Rain-soaked confrontation at the docks. Gunfire exchange among shipping containers. Fog rolling off the water.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:1,weather_dependent:0,multi_unit:0},reasons:["Rain tower coordination for consistent rain","Muzzle flash and squib work","Fog machine integration with practical rain","Night exterior lighting for large set"],capture:"Rain towers for consistent precipitation. Pre-rig containers with squib charges. Fog machines at water line. Multiple night shoots.",notes:"Night rain shoots are slow — budget 40% more time. Protect camera equipment. Actor comfort breaks for wet work."},
-  {id:"7",slug:"INT. SIGNAL TOWER — CONTROL ROOM — NIGHT",ie:"INT",dn:"NIGHT",pg:"5 2/8",ch:["DETECTIVE REYES","DR. VASQUEZ","MAYA","TECH WILSON"],cats:["digital_augmentation","destruction_damage","fire_pyro"],cr:4,sr:4,shots:{min:12,l:20,max:30},sum:"Final showdown in the signal tower. Banks of monitors display the countdown. Explosion rocks the building. Reyes makes the critical choice — cut the signal or let it transmit.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Holographic display FX for signal visualization","Screen content for 20+ monitors","Structural collapse FX (practical + CG)","Interactive lighting from displays","Pyro for explosion damage"],capture:"Build practical control room with LED screens for interactive light. CG holographic overlay in post. Pre-rig for structural damage practical FX. Green screen window views.",notes:"Climactic scene — every department converges here. Schedule last in production. Lock screen content in pre-vis."}
+  {id:"1",slug:"INT. ABANDONED WAREHOUSE â NIGHT",ie:"INT",dn:"NIGHT",pg:"3 2/8",ch:["DETECTIVE REYES","OFFICER CHEN","SWAT TEAM"],cats:["destruction_damage","weapons_combat","fire_pyro"],cr:5,sr:4,shots:{min:14,l:22,max:32},sum:"SWAT team breaches a warehouse rigged with explosives. Massive fireball blows out the second floor. Reyes narrowly escapes through collapsing scaffolding.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Large-scale practical explosion with CG enhancement","Collapsing scaffolding rig (mechanical + CG extension)","Fire stunt coordination â 8+ performers","Confined space pyro safety protocols"],capture:"Pre-rig warehouse for controlled pyro charges. Shoot collapse practically with CG extension for upper floors. Multiple safety takes.",notes:"Hero explosion â sets visual tone for entire film. Budget for 2 full rehearsals + 3 takes."},
+  {id:"2",slug:"EXT. MOUNTAIN HIGHWAY â DAY",ie:"EXT",dn:"DAY",pg:"4 4/8",ch:["MAYA","DRIVER","HELICOPTER PILOT"],cats:["vehicles_mech","aerial_height","destruction_damage"],cr:5,sr:5,shots:{min:20,l:35,max:50},sum:"High-speed car chase along cliff-edge highway. Helicopter pursuit. Lead car clips barrier and tumbles off the edge â hero shot of the fall.",flags:{blue_green_screen:0,water_work:0,aerial_drone:1,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:1},reasons:["Precision stunt driving at speed","Helicopter aerial coordination","CG cliff extension and car tumble","Road closure permits + multi-unit logistics","Weather-dependent mountain shooting"],capture:"Practical driving stunts with stunt doubles. CG takeover for cliff fall. Drone + helicopter for aerials. 2 camera cars.",notes:"Most complex action sequence. Pre-vis every shot. Lock road permits 8 weeks out. Stunt coordinator needs 3 days rehearsal."},
+  {id:"3",slug:"INT. UNDERWATER RESEARCH LAB â NIGHT",ie:"INT",dn:"NIGHT",pg:"2 6/8",ch:["DR. VASQUEZ","TECH WILSON","LAB CREW"],cats:["water_work","digital_augmentation","destruction_damage"],cr:4,sr:4,shots:{min:8,l:14,max:20},sum:"Pressure breach floods the lab. Water pours through cracking observation windows. Emergency lights strobe as crew scrambles for the airlock.",flags:{blue_green_screen:1,water_work:1,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical water dump rigs + CG water enhancement","Cracking glass FX (practical breakaway + CG)","Underwater tank work for exterior shots","Actor safety in rising water levels"],capture:"Build practical lab set over water tank. Controlled water dump from overhead rigs. CG water extension for volume. Breakaway glass for hero crack shot.",notes:"Water work always overruns â budget 50% more time. Safety divers on standby. Waterproof all electronics."},
+  {id:"4",slug:"EXT. CITY ROOFTOP â DUSK",ie:"EXT",dn:"DUSK",pg:"2/8",ch:["DETECTIVE REYES","MAYA"],cats:["aerial_height","weather_atmosphere","digital_augmentation"],cr:3,sr:4,shots:{min:4,l:8,max:12},sum:"Reyes confronts Maya on a rooftop at sunset. City skyline behind them. She steps onto the ledge â he talks her back.",flags:{blue_green_screen:1,water_work:0,aerial_drone:1,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:0},reasons:["Narrow golden hour shooting window","Green screen skyline extension","Drone establishing shots","Fall safety rigging for ledge work"],capture:"Shoot on practical rooftop with green screen for skyline. Drone flyover for establishing shot. Safety wire for ledge scenes.",notes:"Emotional climax â performances matter more than VFX. Schedule 3 sunset attempts. Wire safety non-negotiable."},
+  {id:"5",slug:"INT. POLICE PRECINCT â DAY",ie:"INT",dn:"DAY",pg:"3/8",ch:["DETECTIVE REYES","CAPTAIN OKAFOR","OFFICER CHEN"],cats:[],cr:1,sr:1,shots:{min:0,l:1,max:2},sum:"Reyes briefs the team on the warehouse raid. Tension with Captain Okafor over jurisdiction. Standard dialogue scene.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Minimal VFX â monitor screen inserts only"],capture:"Standard coverage. Shoot monitor graphics separately for compositing.",notes:"Character development scene. No VFX concerns beyond screen inserts."},
+  {id:"6",slug:"EXT. HARBOR DOCKS â NIGHT",ie:"EXT",dn:"NIGHT",pg:"4/8",ch:["DETECTIVE REYES","MAYA","ARMED GUARDS","DOCK WORKERS"],cats:["weapons_combat","crowd_extras","weather_atmosphere"],cr:4,sr:3,shots:{min:10,l:16,max:24},sum:"Rain-soaked confrontation at the docks. Gunfire exchange among shipping containers. Fog rolling off the water.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:1,weather_dependent:0,multi_unit:0},reasons:["Rain tower coordination for consistent rain","Muzzle flash and squib work","Fog machine integration with practical rain","Night exterior lighting for large set"],capture:"Rain towers for consistent precipitation. Pre-rig containers with squib charges. Fog machines at water line. Multiple night shoots.",notes:"Night rain shoots are slow â budget 40% more time. Protect camera equipment. Actor comfort breaks for wet work."},
+  {id:"7",slug:"INT. SIGNAL TOWER â CONTROL ROOM â NIGHT",ie:"INT",dn:"NIGHT",pg:"5 2/8",ch:["DETECTIVE REYES","DR. VASQUEZ","MAYA","TECH WILSON"],cats:["digital_augmentation","destruction_damage","fire_pyro"],cr:4,sr:4,shots:{min:12,l:20,max:30},sum:"Final showdown in the signal tower. Banks of monitors display the countdown. Explosion rocks the building. Reyes makes the critical choice â cut the signal or let it transmit.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Holographic display FX for signal visualization","Screen content for 20+ monitors","Structural collapse FX (practical + CG)","Interactive lighting from displays","Pyro for explosion damage"],capture:"Build practical control room with LED screens for interactive light. CG holographic overlay in post. Pre-rig for structural damage practical FX. Green screen window views.",notes:"Climactic scene â every department converges here. Schedule last in production. Lock screen content in pre-vis."}
 ];
 
 let COSTS = [
   {sev:5,title:"Car Tumble Stunt Coordination",desc:"The cliff-edge car tumble requires precision stunt driving, CG takeover, and helicopter coordination. Expect 3 full days minimum for the sequence with backup weather days.",aff:"Scene 2"},
-  {sev:5,title:"Warehouse Explosion Scale",desc:"The hero explosion requires controlled pyro, CG extension, and collapsing scaffolding rigs. Each full take costs significant reset time — budget for limited attempts.",aff:"Scene 1"},
+  {sev:5,title:"Warehouse Explosion Scale",desc:"The hero explosion requires controlled pyro, CG extension, and collapsing scaffolding rigs. Each full take costs significant reset time â budget for limited attempts.",aff:"Scene 1"},
   {sev:4,title:"Water Work Overtime (Lab Flood)",desc:"Water-based practical effects consistently overrun by 40-60%. Drainage, reset time, actor dry-off breaks. Budget 50% more time than estimated.",aff:"Scene 3"},
   {sev:4,title:"Night Rain Shoot Logistics",desc:"Rain tower coordination with night exterior lighting is slow. Expect 40% less coverage per hour than dry night shoots. Equipment waterproofing adds setup time.",aff:"Scene 6"},
   {sev:3,title:"Golden Hour Rooftop Window",desc:"The rooftop confrontation depends on a 15-minute golden hour window. Schedule 3 sunset attempts minimum. Each failed attempt costs a full company move.",aff:"Scene 4"},
@@ -1333,12 +1334,12 @@ let COSTS = [
 ];
 
 let QS = [
-  {p:"critical",t:"What is the target VFX shot count for the car chase? The script supports 20-50 shots — at $8-20K per shot, this single sequence ranges from $160K to $1M.",cat:"Budget",dept:"Producer"},
+  {p:"critical",t:"What is the target VFX shot count for the car chase? The script supports 20-50 shots â at $8-20K per shot, this single sequence ranges from $160K to $1M.",cat:"Budget",dept:"Producer"},
   {p:"critical",t:"Will the warehouse explosion be primarily practical or CG-enhanced? Full practical limits takes but looks authentic. Heavy CG allows more control but doubles post costs.",cat:"Creative",dept:"VFX Supervisor"},
   {p:"high",t:"Is the underwater lab a tank build or dry-for-wet? Tank work is more realistic but adds 3-4 days. Dry-for-wet with CG water is faster but may look less convincing.",cat:"Technical",dept:"VFX Supervisor"},
   {p:"high",t:"How many rain nights are budgeted for the dock sequence? The script implies a lengthy scene but budget may only support 2-3 nights of rain tower work.",cat:"Budget",dept:"Producer"},
   {p:"medium",t:"Will the signal tower holographic displays be practical LED volumes or full CG in post? LED volumes give interactive light on actors but limit camera angles.",cat:"Technical",dept:"VFX Supervisor"},
-  {p:"medium",t:"What is the cliff fall approach — full CG car, miniature, or hybrid? Each has different cost/quality tradeoffs. CG is most flexible but most expensive.",cat:"Creative",dept:"VFX Supervisor"},
+  {p:"medium",t:"What is the cliff fall approach â full CG car, miniature, or hybrid? Each has different cost/quality tradeoffs. CG is most flexible but most expensive.",cat:"Creative",dept:"VFX Supervisor"},
   {p:"low",t:"Are the precinct monitor inserts live feeds or pre-recorded graphics? Pre-recorded is cheaper but live playback gives more natural actor eyelines.",cat:"Style",dept:"DP / Camera"}
 ];
 
@@ -1374,9 +1375,9 @@ function renderExecSummary() {
 
   document.getElementById('execSummary').innerHTML = `
     <div class="exec-stat"><div class="exec-val">${S.length}</div><div class="exec-label">Scenes</div><div class="exec-note">${vfxScenes} with VFX</div></div>
-    <div class="exec-stat"><div class="exec-val">${totalShots}</div><div class="exec-label">Est. VFX Shots</div><div class="exec-note">${minShots}–${maxShots} range</div></div>
-    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[clamp(Math.round(parseFloat(avgCost)),1,5)]}">${avgCost}</div><div class="exec-label">Avg Cost Risk</div><div class="exec-note">1–5 scale</div></div>
-    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[5]}">${high}</div><div class="exec-label">High Risk Scenes</div><div class="exec-note">cost ≥ 4</div></div>`;
+    <div class="exec-stat"><div class="exec-val">${totalShots}</div><div class="exec-label">Est. VFX Shots</div><div class="exec-note">${minShots}â${maxShots} range</div></div>
+    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[clamp(Math.round(parseFloat(avgCost)),1,5)]}">${avgCost}</div><div class="exec-label">Avg Cost Risk</div><div class="exec-note">1â5 scale</div></div>
+    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[5]}">${high}</div><div class="exec-label">High Risk Scenes</div><div class="exec-note">cost â¥ 4</div></div>`;
 }
 
 function renderTimeline() {
@@ -1385,9 +1386,9 @@ function renderTimeline() {
 
   bars.innerHTML = S.map((s, i) => {
     const pct = 20 + (s.cr / 5) * 80;
-    const loc = s.slug.split('—')[1]?.trim() || s.slug;
+    const loc = s.slug.split('â')[1]?.trim() || s.slug;
     return `<div class="t-bar" data-scene="${s.id}" style="height:${pct}%;background:${RC[s.cr]};animation-delay:${i*0.04}s" onclick="jumpToScene('${s.id}')">
-      <div class="t-bar-tip"><strong>Scene ${esc(s.id)}</strong><br>${esc(loc)}<br>Cost ${s.cr}/5 · Sched ${s.sr}/5 · ${s.shots.l} shots</div>
+      <div class="t-bar-tip"><strong>Scene ${esc(s.id)}</strong><br>${esc(loc)}<br>Cost ${s.cr}/5 Â· Sched ${s.sr}/5 Â· ${s.shots.l} shots</div>
     </div>`;
   }).join('');
 
@@ -1522,7 +1523,7 @@ function renderJumpMenu() {
   const menu = document.getElementById('jumpMenu');
   menu.innerHTML = S.map(s => {
     const col = RC_HEX[clamp(s.cr,1,5)];
-    const loc = s.slug.split('—')[1]?.trim() || s.slug;
+    const loc = s.slug.split('â')[1]?.trim() || s.slug;
     return `<div class="jump-item" onclick="jumpToScene('${esc(s.id)}');closeJumpMenu()">
       <span class="jump-item-dot" style="background:${col}"></span>
       <span class="jump-item-id">${esc(s.id)}</span>
@@ -1598,7 +1599,7 @@ function sortTable(col) {
     if (arrow) arrow.textContent = '';
     if (th.dataset.sort === col) {
       th.classList.add('sorted');
-      if (arrow) arrow.textContent = sortState.asc ? '▲' : '▼';
+      if (arrow) arrow.textContent = sortState.asc ? 'â²' : 'â¼';
     }
   });
 
@@ -1745,7 +1746,7 @@ window.addEventListener('scroll', function() {
 }, { passive: true });
 
 // ================================================================
-// INTERSECTION OBSERVER — fade-in animation
+// INTERSECTION OBSERVER â fade-in animation
 // ================================================================
 function setupObserver() {
   if (!('IntersectionObserver' in window)) {
@@ -1765,7 +1766,7 @@ function setupObserver() {
 }
 
 // ================================================================
-// LOAD JSON — map BreakdownOutput to UI format and re-render
+// LOAD JSON â map BreakdownOutput to UI format and re-render
 // ================================================================
 function mapBreakdownToUI(data) {
   // Map scenes
@@ -1777,7 +1778,7 @@ function mapBreakdownToUI(data) {
       slug: scene.slugline || '',
       ie: (scene.int_ext || '').toUpperCase(),
       dn: (scene.day_night || '').toUpperCase(),
-      pg: scene.page_count_eighths ? scene.page_count_eighths + '/8' : '—',
+      pg: scene.page_count_eighths ? scene.page_count_eighths + '/8' : 'â',
       ch: scene.characters || [],
       cats: (scene.vfx_categories || []),
       cr: scene.cost_risk_score || 1,
@@ -1858,6 +1859,135 @@ function renderAll() {
   if (currentView === 'table') renderTable();
 }
 
+
+function handleScriptFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'json') {
+    loadJsonFile(file);
+  } else if (ext === 'docx' || ext === 'doc') {
+    parseDocxFile(file);
+  } else if (ext === 'txt' || ext === 'fountain' || ext === 'rtf') {
+    parseTextFile(file);
+  } else if (ext === 'fdx') {
+    parseFdxFile(file);
+  } else if (ext === 'pdf') {
+    alert('PDF upload requires the backend server. Please use Word Doc (.docx), Text (.txt), Final Draft (.fdx), or Fountain (.fountain) format.');
+  } else {
+    alert('Unsupported file format: .' + ext);
+  }
+}
+
+function parseDocxFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    mammoth.extractRawText({arrayBuffer: e.target.result})
+      .then(function(result) {
+        const text = result.value;
+        const data = textToBreakdown(text, file.name);
+        mapBreakdownToUI(data);
+      })
+      .catch(function(err) {
+        alert('Failed to parse Word document: ' + err.message);
+      });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseTextFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const data = textToBreakdown(text, file.name);
+    mapBreakdownToUI(data);
+  };
+  reader.readAsText(file);
+}
+
+function parseFdxFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(e.target.result, 'text/xml');
+      const paragraphs = xml.querySelectorAll('Paragraph');
+      let text = '';
+      paragraphs.forEach(function(p) {
+        const type = p.getAttribute('Type') || '';
+        const content = Array.from(p.querySelectorAll('Text')).map(function(t) { return t.textContent; }).join('');
+        if (type === 'Scene Heading') {
+          text += '\n' + content + '\n';
+        } else if (type === 'Action') {
+          text += content + '\n';
+        } else if (type === 'Character') {
+          text += '\n' + content + '\n';
+        } else if (type === 'Dialogue') {
+          text += content + '\n';
+        } else {
+          text += content + '\n';
+        }
+      });
+      const data = textToBreakdown(text, file.name);
+      mapBreakdownToUI(data);
+    } catch (err) {
+      alert('Failed to parse Final Draft file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function textToBreakdown(text, filename) {
+  var sceneHeadingRe = /^\s*(INT\.?|EXT\.?|INT\.?\/EXT\.?|I\/E\.?)\s+.+/gim;
+  var lines = text.split('\n');
+  var scenes = [];
+  var currentScene = null;
+  var sceneNum = 0;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (sceneHeadingRe.test(line)) {
+      sceneHeadingRe.lastIndex = 0;
+      if (currentScene) {
+        scenes.push(currentScene);
+      }
+      sceneNum++;
+      var isInt = /^\s*INT/i.test(line);
+      var isDay = /DAY/i.test(line);
+      currentScene = {
+        id: String(sceneNum),
+        slug: line,
+        ie: isInt ? 'INT' : 'EXT',
+        dn: isDay ? 'DAY' : 'NIGHT',
+        pages: 1,
+        cats: [],
+        cr: 0,
+        sr: 0,
+        shots: {l: 0, m: 0, h: 0},
+        chars: [],
+        flags: [],
+        notes: '',
+        body: ''
+      };
+    } else if (currentScene) {
+      currentScene.body += line + '\n';
+      if (/^[A-Z][A-Z\s]+$/.test(line) && line.length > 1 && line.length < 40) {
+        if (currentScene.chars.indexOf(line) === -1) {
+          currentScene.chars.push(line);
+        }
+      }
+    }
+  }
+  if (currentScene) scenes.push(currentScene);
+
+  return {
+    project_summary: {
+      title: filename.replace(/\.[^.]+$/, ''),
+      total_scenes: scenes.length,
+      format: filename.split('.').pop().toUpperCase() + ' Upload'
+    },
+    scenes: scenes
+  };
+}
+
 function loadJsonFile(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -1878,7 +2008,7 @@ function loadJsonFile(file) {
 // File input handler
 document.getElementById('jsonFileInput').addEventListener('change', function(e) {
   if (e.target.files.length > 0) {
-    loadJsonFile(e.target.files[0]);
+    handleScriptFile(e.target.files[0]);
     e.target.value = ''; // reset for re-upload
   }
 });
@@ -1905,11 +2035,7 @@ document.addEventListener('drop', function(e) {
   document.getElementById('dropOverlay').classList.remove('visible');
   if (e.dataTransfer.files.length > 0) {
     const file = e.dataTransfer.files[0];
-    if (file.name.endsWith('.json')) {
-      loadJsonFile(file);
-    } else {
-      alert('Please drop a .json file.');
-    }
+    handleScriptFile(file);
   }
 });
 
