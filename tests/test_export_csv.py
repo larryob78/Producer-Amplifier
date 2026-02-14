@@ -92,9 +92,11 @@ def test_pipe_delimited_capped_at_3():
     csv_str = export_scenes_csv_string(breakdown)
     reader = csv.DictReader(io.StringIO(csv_str))
     rows = list(reader)
-    # Scene 2 has 4 characters but should be capped at 3
-    chars = rows[1]["characters"].split("|")
-    assert len(chars) == 3
+    assert "(+1 more)" in rows[1]["characters"]
+    # First 3 characters should be present
+    assert "HERO" in rows[1]["characters"]
+    assert "VILLAIN" in rows[1]["characters"]
+    assert "SIDEKICK" in rows[1]["characters"]
 
 
 def test_vfx_categories_pipe_delimited():
@@ -114,6 +116,16 @@ def test_production_flags_shows_active_only():
     assert rows[0]["production_flags"] == "stunts"
     assert "creatures" in rows[1]["production_flags"]
     assert "destruction" in rows[1]["production_flags"]
+
+
+def test_pipe_join_no_truncation():
+    """Short lists should not have truncation indicator."""
+    breakdown = _make_breakdown()
+    csv_str = export_scenes_csv_string(breakdown)
+    reader = csv.DictReader(io.StringIO(csv_str))
+    rows = list(reader)
+    # Scene 1 has only 2 characters — no truncation
+    assert "(+" not in rows[0]["characters"]
 
 
 def test_export_to_file(tmp_path):

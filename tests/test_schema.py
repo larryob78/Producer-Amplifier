@@ -1,5 +1,7 @@
 """Tests for the output schema models."""
 
+import pytest
+
 from sba.output.schema import (
     BreakdownOutput,
     Scene,
@@ -37,10 +39,28 @@ def test_shot_count_estimate_ordering():
     assert est.min <= est.likely <= est.max
 
 
+def test_shot_count_rejects_min_greater_than_likely():
+    """min > likely must raise ValueError."""
+    with pytest.raises(ValueError):
+        VfxShotCountEstimate(min=10, likely=5, max=20)
+
+
+def test_shot_count_rejects_likely_greater_than_max():
+    """likely > max must raise ValueError."""
+    with pytest.raises(ValueError):
+        VfxShotCountEstimate(min=1, likely=10, max=5)
+
+
+def test_shot_count_allows_equal_values():
+    """Equal min/likely/max should be valid."""
+    est = VfxShotCountEstimate(min=5, likely=5, max=5)
+    assert est.min == 5
+    assert est.likely == 5
+    assert est.max == 5
+
+
 def test_cost_risk_score_range():
     """Cost risk must be 1-5."""
-    import pytest
-
     with pytest.raises(Exception):
         Scene(
             scene_id="SC001",

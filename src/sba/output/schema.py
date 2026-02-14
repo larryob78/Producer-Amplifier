@@ -9,7 +9,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class VfxCategory(str, Enum):
@@ -61,6 +61,14 @@ class VfxShotCountEstimate(BaseModel):
     min: int = Field(ge=0)
     likely: int = Field(ge=0)
     max: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _check_ordering(self) -> VfxShotCountEstimate:
+        if self.min > self.likely:
+            raise ValueError(f"min ({self.min}) must be <= likely ({self.likely})")
+        if self.likely > self.max:
+            raise ValueError(f"likely ({self.likely}) must be <= max ({self.max})")
+        return self
 
 
 class ProductionFlags(BaseModel):

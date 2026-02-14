@@ -18,6 +18,7 @@ from sba.rag.corpus_builder import load_corpus_as_text
 
 if TYPE_CHECKING:
     from sba.output.schema import BreakdownOutput
+    from sba.parsing.models import ParsedScript
 
 
 def analyze_script(
@@ -119,7 +120,7 @@ def analyze_script(
     )
 
 
-def _retrieve_rag_context(parsed) -> str:
+def _retrieve_rag_context(parsed: ParsedScript) -> str:
     """Use the full RAG pipeline to retrieve relevant context.
 
     Retrieves based on detected VFX trigger categories from parsing.

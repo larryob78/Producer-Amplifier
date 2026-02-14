@@ -15,7 +15,11 @@ from sba.output.schema import BreakdownOutput, Scene
 def _pipe_join(items: list[str], max_items: int = 3) -> str:
     """Join list items with pipe delimiter, capped at max_items."""
     truncated = items[:max_items]
-    return "|".join(truncated)
+    result = "|".join(truncated)
+    remaining = len(items) - max_items
+    if remaining > 0:
+        result += f" (+{remaining} more)"
+    return result
 
 
 def _scene_to_row(scene: Scene) -> dict[str, str]:
