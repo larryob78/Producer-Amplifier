@@ -278,6 +278,53 @@ body {
   color: var(--text-1);
 }
 
+/* Load JSON button */
+.load-json-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.load-json-btn:hover { background: rgba(201,168,76,0.2); color: var(--text-1); }
+
+/* Drag-drop overlay */
+.drop-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,14,13,0.92);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.drop-overlay.visible { display: flex; }
+.drop-overlay-inner {
+  text-align: center;
+  padding: 48px;
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  color: var(--accent);
+}
+.drop-text {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-top: 16px;
+}
+.drop-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+  margin-top: 8px;
+}
+
 /* ================================================================
    PAGE CONTAINER
    ================================================================ */
@@ -982,7 +1029,7 @@ body {
   .title-block h1 { font-size: 26px; }
   .title-meta { flex-wrap: wrap; justify-content: center; gap: 12px; }
 
-  .nav-links, .nav-search, .jump-dropdown, .view-toggle { display: none; }
+  .nav-links, .nav-search, .jump-dropdown, .view-toggle, .load-json-btn { display: none; }
   .nav-hamburger { display: flex; }
   .nav-mobile-menu a.active { color: var(--accent); }
 
@@ -1043,16 +1090,27 @@ body {
       <button class="jump-btn" id="jumpBtn">Jump to Scene ▾</button>
       <div class="jump-menu" id="jumpMenu"></div>
     </div>
+    <button class="load-json-btn" id="loadJsonBtn" onclick="document.getElementById('jsonFileInput').click()">Load JSON</button>
+    <input type="file" id="jsonFileInput" accept=".json" style="display:none" />
     <div class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()">
       <span></span><span></span><span></span>
     </div>
   </div>
 </nav>
+<!-- Drag-drop overlay -->
+<div class="drop-overlay" id="dropOverlay">
+  <div class="drop-overlay-inner">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div class="drop-text">Drop JSON file here</div>
+    <div class="drop-hint">BreakdownOutput JSON from SBA</div>
+  </div>
+</div>
 <div class="nav-mobile-menu" id="mobileMenu">
   <a href="#summary" onclick="closeMobileMenu()">Summary</a>
   <a href="#scenes" onclick="closeMobileMenu()">Scenes</a>
   <a href="#costs" onclick="closeMobileMenu()">Hidden Costs</a>
   <a href="#questions" onclick="closeMobileMenu()">Questions</a>
+  <a href="#" onclick="event.preventDefault();closeMobileMenu();document.getElementById('jsonFileInput').click()">Load JSON</a>
 </div>
 
 <!-- ===== PAGE ===== -->
@@ -1194,7 +1252,7 @@ const FN = {
   children:'Children', night_exterior:'Night Ext', weather_dependent:'Weather', multi_unit:'Multi-Unit'
 };
 
-const S = [
+let S = [
   {id:"1",slug:"EXT. SPACE — STAR FIELD",ie:"EXT",dn:"NIGHT",pg:"2/8",ch:["NARRATOR"],cats:["digital_augmentation"],cr:2,sr:1,shots:{min:2,l:4,max:6},sum:"Opening crawl over star field. Minimal VFX — primarily title card compositing.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:1,weather_dependent:0,multi_unit:0},reasons:["Standard title sequence"],capture:"Lock off star field plate, no parallax needed",notes:"Standard opening — budget impact minimal"},
   {id:"2",slug:"EXT. SPACE — REBEL BLOCKADE RUNNER",ie:"EXT",dn:"NIGHT",pg:"3/8",ch:[],cats:["vehicles_mech","weapons_combat","destruction_damage"],cr:5,sr:5,shots:{min:18,l:28,max:40},sum:"Rebel Blockade Runner pursued by massive Star Destroyer. Laser fire exchange, ship shaking from impacts.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Full CG space battle","Multiple hero ships requiring detailed models","Laser/explosion FX throughout","Scale differential Star Destroyer vs Blockade Runner"],capture:"Shoot practical sparks and pyro elements for compositing. Build miniatures for hero angles.",notes:"Signature opening — sets visual bar for entire film. Budget accordingly."},
   {id:"3",slug:"INT. REBEL BLOCKADE RUNNER — HALLWAY",ie:"INT",dn:"DAY",pg:"1 2/8",ch:["C-3PO","R2-D2","REBEL TROOPERS"],cats:["destruction_damage","weapons_combat"],cr:3,sr:3,shots:{min:6,l:10,max:14},sum:"Explosion rocks the ship. Rebel soldiers take defensive positions. C-3PO and R2-D2 navigate the chaos.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical explosion coordination","Stunt performers in confined space","Droid costume/puppet integration"],capture:"Pre-rig hallway for pyro charges. Separate smoke and spark elements.",notes:"Droid performances critical — plan extra time for puppet coordination"},
@@ -1214,7 +1272,7 @@ const S = [
   {id:"17",slug:"EXT. SPACE — TRENCH RUN",ie:"EXT",dn:"NIGHT",pg:"6 4/8",ch:["LUKE","HAN","WEDGE","BIGGS","VADER","PILOTS"],cats:["vehicles_mech","weapons_combat","destruction_damage","aerial_height","digital_augmentation"],cr:5,sr:5,shots:{min:60,l:95,max:140},sum:"Climactic trench run. X-Wings and TIE Fighters dogfight. Luke fires killing shot. Death Star explodes.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:1},reasons:["Most VFX-intensive sequence in film","60-140 VFX shots","Full CG space environment","Multiple hero ship models","Destruction sim for Death Star","Cockpit green screen compositing","Cross-cutting 6+ storylines"],capture:"Build practical cockpits per hero pilot. Green screen for canopy views. Shoot all cockpit coverage before VFX completes. Detailed miniatures for hero destruction shots.",notes:"THE sequence. 40% of VFX budget here. Pre-vis every shot. Lock editorial before committing to final VFX."}
 ];
 
-const COSTS = [
+let COSTS = [
   {sev:5,title:"Lightsaber Rotoscoping Volume",desc:"Every lightsaber shot requires frame-by-frame rotoscoping. Expect 150-200 individual effect shots — each needing 2-4 hours of artist time.",aff:"Scenes 9, 16, 17 + pickups"},
   {sev:5,title:"Trench Run Pre-Vis & Editorial Lock",desc:"The trench run (60-140 shots) cannot begin final VFX until editorial is locked. Late changes cascade into massive rework costs. Budget 3 complete pre-vis iterations.",aff:"Scene 17"},
   {sev:4,title:"Desert Location Weather Buffers",desc:"Tatooine exteriors are weather-dependent. Historical data suggests 30-40% of desert shoot days experience sand/wind delays. Standard 2-day buffer is insufficient.",aff:"Scenes 6, 8, 9"},
@@ -1224,7 +1282,7 @@ const COSTS = [
   {sev:3,title:"Twin Sunset Reshoots",desc:"The twin sunset shot has a 15-minute golden hour window. Expect 3+ attempts across different days. Each failed attempt costs a full company move.",aff:"Scene 8"}
 ];
 
-const QS = [
+let QS = [
   {p:"critical",t:"What is the target VFX shot count for the trench run? The script supports 60-140 shots — at $5-15K per shot, this single sequence could range from $300K to $2.1M.",cat:"Budget",dept:"Producer"},
   {p:"critical",t:"Will lightsaber blades be practical (LED) or fully post? Practical LEDs give interactive light on actors but limit choreography. Full post doubles rotoscoping costs.",cat:"Creative",dept:"VFX Supervisor"},
   {p:"high",t:"Is Alderaan's destruction a hero moment or quick cut? A 3-second explosion vs 15-second destruction sequence has a 5x cost difference.",cat:"Editorial",dept:"Producer"},
@@ -1655,6 +1713,155 @@ function setupObserver() {
 
   document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
 }
+
+// ================================================================
+// LOAD JSON — map BreakdownOutput to UI format and re-render
+// ================================================================
+function mapBreakdownToUI(data) {
+  // Map scenes
+  S.length = 0;
+  (data.scenes || []).forEach(scene => {
+    const flags = scene.production_flags || {};
+    S.push({
+      id: scene.scene_id || '',
+      slug: scene.slugline || '',
+      ie: (scene.int_ext || '').toUpperCase(),
+      dn: (scene.day_night || '').toUpperCase(),
+      pg: scene.page_count_eighths ? scene.page_count_eighths + '/8' : '—',
+      ch: scene.characters || [],
+      cats: (scene.vfx_categories || []),
+      cr: scene.cost_risk_score || 1,
+      sr: scene.schedule_risk_score || 1,
+      shots: {
+        min: scene.vfx_shot_count_estimate?.min || 0,
+        l: scene.vfx_shot_count_estimate?.likely || 0,
+        max: scene.vfx_shot_count_estimate?.max || 0
+      },
+      sum: scene.scene_summary || '',
+      flags: {
+        blue_green_screen: flags.blue_green_screen ? 1 : 0,
+        water_work: flags.water ? 1 : 0,
+        aerial_drone: flags.aerial_drone ? 1 : 0,
+        fire_pyro: flags.fire_smoke ? 1 : 0,
+        crowd_bg: flags.crowds ? 1 : 0,
+        stunts: flags.stunts ? 1 : 0,
+        animals: flags.creatures ? 1 : 0,
+        children: flags.children ? 1 : 0,
+        night_exterior: flags.night_exterior ? 1 : 0,
+        weather_dependent: flags.weather ? 1 : 0,
+        multi_unit: flags.multi_unit ? 1 : 0
+      },
+      reasons: scene.risk_reasons || [],
+      capture: (scene.suggested_capture || []).join('. '),
+      notes: Array.isArray(scene.notes_for_producer)
+        ? scene.notes_for_producer.join(' ')
+        : (scene.notes_for_producer || '')
+    });
+  });
+
+  // Map hidden costs
+  COSTS.length = 0;
+  (data.hidden_cost_radar || []).forEach(c => {
+    const sevMap = {critical:5, high:4, medium:3, low:1};
+    COSTS.push({
+      sev: sevMap[c.severity] || 3,
+      title: c.flag || '',
+      desc: c.why_it_matters || '',
+      aff: (c.where || []).map(w => 'Scene ' + w).join(', ')
+    });
+  });
+
+  // Map questions
+  QS.length = 0;
+  const kq = data.key_questions_for_team || {};
+  const deptMap = {for_producer:'Producer', for_vfx_supervisor:'VFX Supervisor', for_dp_camera:'DP / Camera', for_locations_art_dept:'Locations / Art Dept'};
+  Object.entries(deptMap).forEach(([key, dept]) => {
+    (kq[key] || []).forEach(q => {
+      QS.push({ p: 'medium', t: q, cat: '', dept: dept });
+    });
+  });
+
+  // Update title and metadata
+  const ps = data.project_summary || {};
+  document.getElementById('projectTitle').textContent = ps.project_title || 'Untitled Project';
+  document.getElementById('metaScenes').textContent = (data.scenes || []).length + ' scenes';
+
+  // Re-render everything
+  renderAll();
+}
+
+function renderAll() {
+  renderExecSummary();
+  renderTimeline();
+  renderScenes();
+  renderCosts();
+  renderQuestions();
+  renderJumpMenu();
+  setupObserver();
+  updateExpandBtn();
+  // Reset state
+  activeFilter = null;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchCount').classList.remove('visible');
+  document.getElementById('filterIndicator').classList.remove('visible');
+  if (currentView === 'table') renderTable();
+}
+
+function loadJsonFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.scenes && !data.project_summary) {
+        alert('Invalid JSON: expected a BreakdownOutput with "scenes" and "project_summary" fields.');
+        return;
+      }
+      mapBreakdownToUI(data);
+    } catch (err) {
+      alert('Failed to parse JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// File input handler
+document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+  if (e.target.files.length > 0) {
+    loadJsonFile(e.target.files[0]);
+    e.target.value = ''; // reset for re-upload
+  }
+});
+
+// Drag-drop
+let dragCounter = 0;
+document.addEventListener('dragenter', function(e) {
+  e.preventDefault();
+  dragCounter++;
+  document.getElementById('dropOverlay').classList.add('visible');
+});
+document.addEventListener('dragleave', function(e) {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    document.getElementById('dropOverlay').classList.remove('visible');
+  }
+});
+document.addEventListener('dragover', function(e) { e.preventDefault(); });
+document.addEventListener('drop', function(e) {
+  e.preventDefault();
+  dragCounter = 0;
+  document.getElementById('dropOverlay').classList.remove('visible');
+  if (e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0];
+    if (file.name.endsWith('.json')) {
+      loadJsonFile(file);
+    } else {
+      alert('Please drop a .json file.');
+    }
+  }
+});
 
 // ================================================================
 // INIT
