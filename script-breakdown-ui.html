@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBA — Script Breakdown Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   PRODUCTION BIBLE — Design System
+   Warm dark palette · document-first · serif authority
+   ================================================================ */
+
+:root {
+  /* Warm dark layers — like paper in a dimmed production office */
+  --bg: #0f0e0d;
+  --surface: #171614;
+  --surface-2: #1e1d1a;
+  --surface-3: #262522;
+  --surface-raised: #2d2b27;
+
+  /* Edges — warm, barely there */
+  --rule: rgba(255,245,230,0.06);
+  --rule-strong: rgba(255,245,230,0.12);
+  --rule-accent: rgba(255,245,230,0.18);
+
+  /* Text — warm hierarchy */
+  --text-1: #e8e4de;
+  --text-2: #b0a99e;
+  --text-3: #7a7368;
+  --text-4: #4d473f;
+
+  /* Risk spectrum — 5 calibrated stops */
+  --r1: #5a9e6f;
+  --r2: #8fb065;
+  --r3: #c9a84c;
+  --r4: #cf7a3a;
+  --r5: #c4463a;
+
+  /* Accent — warm gold, used only for navigation/interactive */
+  --accent: #c9a84c;
+  --accent-dim: rgba(201,168,76,0.10);
+
+  /* Severity backgrounds */
+  --sev-critical-bg: rgba(196,70,58,0.06);
+  --sev-critical-border: rgba(196,70,58,0.20);
+  --sev-high-bg: rgba(207,122,58,0.06);
+  --sev-high-border: rgba(207,122,58,0.20);
+  --sev-medium-bg: rgba(201,168,76,0.06);
+  --sev-medium-border: rgba(201,168,76,0.20);
+  --sev-low-bg: rgba(90,158,111,0.06);
+  --sev-low-border: rgba(90,158,111,0.20);
+
+  /* Spacing */
+  --page-max: 920px;
+  --gutter: 48px;
+
+  /* Type scale */
+  --serif: 'Source Serif 4', 'Georgia', serif;
+  --sans: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Motion */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text-2);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ================================================================
+   STICKY NAV — slim, document-style
+   ================================================================ */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: rgba(15,14,13,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.nav-inner {
+  width: 100%;
+  max-width: calc(var(--page-max) + var(--gutter)*2);
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nav-brand strong { color: var(--text-2); }
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+.nav-links a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-4);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text-2); }
+.nav-links a.active { color: var(--accent); }
+
+/* ================================================================
+   PAGE CONTAINER
+   ================================================================ */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 44px var(--gutter) 80px;
+}
+
+/* ================================================================
+   TITLE BLOCK
+   ================================================================ */
+.title-block {
+  text-align: center;
+  padding: 72px 0 48px;
+  border-bottom: 1px solid var(--rule);
+}
+.title-block h1 {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.title-block .subtitle {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-3);
+  margin-bottom: 24px;
+}
+.title-meta {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+  letter-spacing: 0.03em;
+}
+.title-meta span { display: flex; align-items: center; gap: 6px; }
+.title-meta .dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--text-4);
+}
+
+/* ================================================================
+   EXECUTIVE SUMMARY
+   ================================================================ */
+.exec-summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.exec-stat {
+  text-align: center;
+  flex: 1;
+}
+.exec-stat + .exec-stat {
+  border-left: 1px solid var(--rule);
+}
+.exec-val {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.exec-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-4);
+  margin-top: 6px;
+}
+.exec-note {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  margin-top: 2px;
+}
+
+/* ================================================================
+   SECTION HEADERS
+   ================================================================ */
+.section {
+  padding-top: 48px;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+  min-width: 20px;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+}
+
+/* ================================================================
+   RISK TIMELINE
+   ================================================================ */
+.risk-timeline {
+  padding: 20px 0;
+  margin-bottom: 8px;
+}
+.timeline-bars {
+  display: flex;
+  gap: 2px;
+  height: 80px;
+  align-items: flex-end;
+}
+.t-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  cursor: pointer;
+  transition: opacity 0.15s, filter 0.15s;
+  opacity: 0.75;
+  position: relative;
+}
+.t-bar:hover { opacity: 1; filter: brightness(1.2); }
+.t-bar-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  pointer-events: none;
+  color: var(--text-2);
+}
+.t-bar:hover .t-bar-tip { display: block; }
+.t-bar-tip strong { color: var(--text-1); }
+
+.timeline-labels {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+.t-label {
+  flex: 1;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-4);
+}
+
+.timeline-legend {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-4);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+}
+
+/* ================================================================
+   SCENE BREAKDOWN SHEET
+   ================================================================ */
+.scene-sheet {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  margin-bottom: 24px;
+  background: var(--surface);
+  transition: border-color 0.2s;
+}
+.scene-sheet:hover { border-color: var(--rule-strong); }
+
+/* Scene header — the breakdown strip */
+.scene-head {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.scene-number {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  min-width: 36px;
+}
+.scene-slug {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+.scene-meta-pills {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.meta-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  color: var(--text-3);
+  border: 1px solid var(--rule);
+}
+.risk-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+/* Scene body */
+.scene-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.scene-col {
+  padding: 20px 24px;
+}
+.scene-col + .scene-col {
+  border-left: 1px solid var(--rule);
+}
+
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-4);
+  margin-bottom: 6px;
+}
+.field-text {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+
+/* Character tags */
+.char-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.char-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--text-2);
+}
+
+/* VFX category pills — muted, desaturated */
+.vfx-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.vfx-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.vfx-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+}
+
+/* Shot estimate range bar */
+.shot-range { margin-top: 4px; }
+.shot-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  position: relative;
+}
+.shot-bar-fill {
+  position: absolute;
+  height: 100%;
+  border-radius: 2px;
+  opacity: 0.35;
+}
+.shot-bar-mid {
+  position: absolute;
+  width: 2px; height: 8px;
+  top: -2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.shot-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+}
+.shot-labels .likely { color: var(--accent); font-weight: 600; }
+
+/* Risk reasons list */
+.reason-list { list-style: none; }
+.reason-list li {
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--text-2);
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+.reason-list li + li { border-top: 1px solid var(--rule); }
+.reason-bullet {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--text-4);
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+/* Capture & notes callouts */
+.callout {
+  padding: 10px 14px;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-left: 2px solid;
+}
+.callout-capture {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--text-2);
+}
+.callout-notes {
+  background: rgba(201,168,76,0.04);
+  border-color: var(--r3);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* Scene flags footer */
+.scene-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+}
+.s-flag {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 2px;
+  color: var(--text-4);
+  background: transparent;
+  border: 1px solid transparent;
+}
+.s-flag.on {
+  color: var(--r4);
+  background: rgba(207,122,58,0.06);
+  border-color: rgba(207,122,58,0.12);
+}
+
+/* ================================================================
+   HIDDEN COST ITEMS
+   ================================================================ */
+.cost-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: flex-start;
+}
+.cost-item:last-child { border-bottom: none; }
+
+.cost-sev-badge {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  width: 36px; height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid;
+}
+.cost-content { flex: 1; min-width: 0; }
+.cost-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 4px;
+}
+.cost-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.cost-affected {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  margin-top: 6px;
+}
+
+/* ================================================================
+   KEY QUESTIONS
+   ================================================================ */
+.q-group { margin-bottom: 28px; }
+.q-group-label {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.q-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: flex-start;
+}
+.q-item:last-child { border-bottom: none; }
+
+.q-marker {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-4);
+  min-width: 20px;
+  line-height: 1.4;
+}
+.q-text {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+  flex: 1;
+}
+.q-priority {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+.doc-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 768px) {
+  :root { --gutter: 20px; }
+  .scene-body { grid-template-columns: 1fr; }
+  .scene-col + .scene-col { border-left: none; border-top: 1px solid var(--rule); }
+  .exec-summary { flex-wrap: wrap; }
+  .exec-stat { min-width: 45%; }
+  .exec-stat + .exec-stat { border-left: none; }
+  .title-block h1 { font-size: 26px; }
+  .title-meta { flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .nav-links { gap: 14px; }
+}
+
+/* ================================================================
+   PRINT
+   ================================================================ */
+@media print {
+  .nav { display: none; }
+  .page { padding-top: 0; }
+  body { background: #fff; color: #222; }
+  .scene-sheet { break-inside: avoid; border-color: #ddd; }
+  .scene-head { background: #f5f5f0; }
+  .title-block h1 { color: #111; }
+  .field-text, .cost-desc, .q-text { color: #333; }
+  .t-bar-tip { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand"><strong>SBA</strong> &nbsp;Script Breakdown</div>
+    <div class="nav-links">
+      <a href="#summary" class="active">Summary</a>
+      <a href="#scenes">Scenes</a>
+      <a href="#costs">Hidden Costs</a>
+      <a href="#questions">Questions</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== PAGE ===== -->
+<div class="page">
+
+  <!-- TITLE BLOCK -->
+  <div class="title-block" id="summary">
+    <h1 id="projectTitle">Star Wars: A New Hope</h1>
+    <div class="subtitle">VFX Breakdown &amp; Production Risk Assessment</div>
+    <div class="title-meta">
+      <span>2026-02-14</span>
+      <span><span class="dot"></span></span>
+      <span id="metaScenes">17 scenes</span>
+      <span><span class="dot"></span></span>
+      <span>~121 est. pages</span>
+      <span><span class="dot"></span></span>
+      <span>claude-opus-4.6</span>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  <div class="exec-summary" id="execSummary"></div>
+
+  <!-- RISK TIMELINE -->
+  <div class="section" id="risk-timeline-section">
+    <div class="section-header">
+      <span class="section-num">I.</span>
+      <h2 class="section-title">Risk Timeline</h2>
+    </div>
+    <div class="risk-timeline">
+      <div class="timeline-bars" id="timelineBars"></div>
+      <div class="timeline-labels" id="timelineLabels"></div>
+      <div class="timeline-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r1)"></div>Minimal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r2)"></div>Mild</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r3)"></div>Moderate</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r4)"></div>High</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--r5)"></div>Critical</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE BREAKDOWNS -->
+  <div class="section" id="scenes">
+    <div class="section-header">
+      <span class="section-num">II.</span>
+      <h2 class="section-title">Scene Breakdowns</h2>
+    </div>
+    <div id="sceneSheets"></div>
+  </div>
+
+  <!-- HIDDEN COSTS -->
+  <div class="section" id="costs">
+    <div class="section-header">
+      <span class="section-num">III.</span>
+      <h2 class="section-title">Hidden Cost Radar</h2>
+    </div>
+    <div id="costItems"></div>
+  </div>
+
+  <!-- KEY QUESTIONS -->
+  <div class="section" id="questions">
+    <div class="section-header">
+      <span class="section-num">IV.</span>
+      <h2 class="section-title">Key Questions for the Team</h2>
+    </div>
+    <div id="questionItems"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    Generated by SBA · Script Breakdown Assistant · claude-opus-4.6 · 2026-02-14
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// DATA
+// ================================================================
+const RC = ['','var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)'];
+const RC_HEX = ['','#5a9e6f','#8fb065','#c9a84c','#cf7a3a','#c4463a'];
+
+const CC = {
+  digital_augmentation:'#7a9e8e', vehicles_mech:'#6a8eb0', weapons_combat:'#b07a7a',
+  destruction_damage:'#b06a6a', weather_atmosphere:'#8a7ab0', creatures_animals:'#6ab08a',
+  supernatural_magic:'#a07ab0', water_work:'#6a9ab0', aerial_height:'#6ab0a0',
+  crowd_extras:'#9a7ab0', fire_pyro:'#b09a6a', set_extension:'#9ab06a', stunts:'#b08a7a'
+};
+const CL = {
+  digital_augmentation:'Digital', vehicles_mech:'Vehicles', weapons_combat:'Weapons',
+  destruction_damage:'Destruction', weather_atmosphere:'Weather', creatures_animals:'Creatures',
+  supernatural_magic:'Supernatural', water_work:'Water', aerial_height:'Aerial',
+  crowd_extras:'Crowds', fire_pyro:'Fire / Pyro', set_extension:'Set Extension', stunts:'Stunts'
+};
+const FN = {
+  blue_green_screen:'Screen', water_work:'Water', aerial_drone:'Aerial',
+  fire_pyro:'Fire', crowd_bg:'Crowd', stunts:'Stunts', animals:'Animals',
+  children:'Children', night_exterior:'Night Ext', weather_dependent:'Weather', multi_unit:'Multi-Unit'
+};
+
+const S = [
+  {id:"1",slug:"EXT. SPACE — STAR FIELD",ie:"EXT",dn:"NIGHT",pg:"2/8",ch:["NARRATOR"],cats:["digital_augmentation"],cr:2,sr:1,shots:{min:2,l:4,max:6},sum:"Opening crawl over star field. Minimal VFX — primarily title card compositing.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:1,weather_dependent:0,multi_unit:0},reasons:["Standard title sequence"],capture:"Lock off star field plate, no parallax needed",notes:"Standard opening — budget impact minimal"},
+  {id:"2",slug:"EXT. SPACE — REBEL BLOCKADE RUNNER",ie:"EXT",dn:"NIGHT",pg:"3/8",ch:[],cats:["vehicles_mech","weapons_combat","destruction_damage"],cr:5,sr:5,shots:{min:18,l:28,max:40},sum:"Rebel Blockade Runner pursued by massive Star Destroyer. Laser fire exchange, ship shaking from impacts.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Full CG space battle","Multiple hero ships requiring detailed models","Laser/explosion FX throughout","Scale differential Star Destroyer vs Blockade Runner"],capture:"Shoot practical sparks and pyro elements for compositing. Build miniatures for hero angles.",notes:"Signature opening — sets visual bar for entire film. Budget accordingly."},
+  {id:"3",slug:"INT. REBEL BLOCKADE RUNNER — HALLWAY",ie:"INT",dn:"DAY",pg:"1 2/8",ch:["C-3PO","R2-D2","REBEL TROOPERS"],cats:["destruction_damage","weapons_combat"],cr:3,sr:3,shots:{min:6,l:10,max:14},sum:"Explosion rocks the ship. Rebel soldiers take defensive positions. C-3PO and R2-D2 navigate the chaos.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical explosion coordination","Stunt performers in confined space","Droid costume/puppet integration"],capture:"Pre-rig hallway for pyro charges. Separate smoke and spark elements.",notes:"Droid performances critical — plan extra time for puppet coordination"},
+  {id:"4",slug:"INT. REBEL BLOCKADE RUNNER — MAIN BRIDGE",ie:"INT",dn:"DAY",pg:"4/8",ch:["STORMTROOPERS","REBEL OFFICERS","DARTH VADER"],cats:["weapons_combat","destruction_damage"],cr:4,sr:4,shots:{min:12,l:18,max:24},sum:"Stormtroopers breach the ship. Intense firefight. Darth Vader enters through smoke — iconic entrance.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Large stunt coordination (20+ performers)","Pyro in enclosed set","Vader entrance timing critical"],capture:"Shoot Vader entrance separately for dramatic lighting control.",notes:"Vader's first appearance — lighting and fog machine timing is everything."},
+  {id:"5",slug:"INT. REBEL BLOCKADE RUNNER — CORRIDOR",ie:"INT",dn:"DAY",pg:"1/8",ch:["PRINCESS LEIA","R2-D2"],cats:["digital_augmentation"],cr:1,sr:1,shots:{min:0,l:1,max:2},sum:"Leia inserts data card into R2-D2. Quiet moment of espionage.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Minimal VFX — dialogue scene"],capture:"Standard coverage",notes:"Character moment. No VFX concerns."},
+  {id:"6",slug:"EXT. TATOOINE — JUNDLAND WASTES",ie:"EXT",dn:"DAY",pg:"2 4/8",ch:["LUKE SKYWALKER","C-3PO","R2-D2","JAWAS"],cats:["weather_atmosphere","vehicles_mech","creatures_animals"],cr:4,sr:4,shots:{min:8,l:14,max:20},sum:"Luke's landspeeder crosses the desert. Jawas capture R2-D2. Vast desert landscape establishing Tatooine.",flags:{blue_green_screen:0,water_work:0,aerial_drone:1,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:1},reasons:["Landspeeder hover effect (wire/rig removal)","Location shooting weather dependency","Sandcrawler scale model or CG","Multiple exterior setups per day"],capture:"Shoot landspeeder on visible rig for wire removal. Capture clean plates. Multiple drone passes.",notes:"Desert scheduling critical — golden hour windows are short."},
+  {id:"7",slug:"INT. LARS HOMESTEAD — GARAGE",ie:"INT",dn:"DAY",pg:"1 6/8",ch:["LUKE SKYWALKER","C-3PO","R2-D2","OWEN LARS","BERU LARS"],cats:["digital_augmentation"],cr:1,sr:1,shots:{min:0,l:2,max:4},sum:"Luke cleans the droids. R2-D2 plays Leia's holographic message. Family dinner scene.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Hologram effect — simple compositing"],capture:"Shoot Leia hologram element separately on black background.",notes:"Hologram is simple but iconic — get the look right in pre-vis."},
+  {id:"8",slug:"EXT. TATOOINE — TWIN SUNSET",ie:"EXT",dn:"DUSK",pg:"2/8",ch:["LUKE SKYWALKER"],cats:["weather_atmosphere","digital_augmentation"],cr:3,sr:4,shots:{min:2,l:4,max:6},sum:"Luke watches the twin suns set. Iconic emotional beat — the Force theme plays.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:0},reasons:["Twin sun compositing over real sunset","Extremely narrow golden hour window","Weather dependency for sky quality"],capture:"Shoot at actual sunset. Multiple takes — window is ~15 minutes. Clean plate for sky comp.",notes:"THE iconic shot. Schedule 3 sunset attempts minimum."},
+  {id:"9",slug:"EXT. DESERT — BEN KENOBI'S HUT",ie:"EXT",dn:"DAY",pg:"4/8",ch:["LUKE","BEN KENOBI","R2-D2","C-3PO","TUSKEN RAIDERS"],cats:["creatures_animals","weapons_combat"],cr:3,sr:3,shots:{min:4,l:8,max:12},sum:"Tusken Raiders attack Luke. Ben Kenobi rescues him. Introduction of the lightsaber.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:0},reasons:["Lightsaber effect (rotoscope/comp)","Stunt coordination on uneven terrain","Creature costumes in desert heat"],capture:"Use reflective blade for lightsaber tracking. Shoot Tusken attack from multiple angles.",notes:"First lightsaber — establish the look here, it carries through entire film."},
+  {id:"10",slug:"INT. MOS EISLEY CANTINA",ie:"INT",dn:"DAY",pg:"3 2/8",ch:["LUKE","BEN KENOBI","HAN SOLO","CHEWBACCA","GREEDO","ALIENS"],cats:["creatures_animals","weapons_combat","crowd_extras"],cr:5,sr:5,shots:{min:14,l:22,max:32},sum:"The legendary cantina. Dozens of alien creatures. Han shoots Greedo. Luke and Ben recruit Han.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["20+ unique creature makeups","Crowd coordination in practical set","Blaster effects throughout","Band performance timing","Iconic scene — quality bar extremely high"],capture:"Pre-make all creature prosthetics. Schedule performers in rotation. Shoot wide establishing with full crowd.",notes:"Most creature-dense scene. Makeup dept needs 3 weeks lead. Budget overtime."},
+  {id:"11",slug:"INT. DEATH STAR — CONFERENCE",ie:"INT",dn:"DAY",pg:"1 4/8",ch:["TARKIN","DARTH VADER","OFFICERS"],cats:[],cr:1,sr:1,shots:{min:0,l:0,max:1},sum:"Imperial officers debate. Vader demonstrates the Force by choking an officer.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Force choke — mostly acting, minimal wire work"],capture:"Standard dialogue coverage. Wire rig for choke lift if needed.",notes:"Performances carry this. Vader's power shown through restraint."},
+  {id:"12",slug:"EXT. SPACE — ALDERAAN DESTRUCTION",ie:"EXT",dn:"NIGHT",pg:"1/8",ch:["PRINCESS LEIA","TARKIN"],cats:["destruction_damage","weapons_combat","digital_augmentation"],cr:5,sr:5,shots:{min:8,l:14,max:20},sum:"Death Star fires superlaser. Alderaan destroyed. Massive planetary destruction sequence.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Full CG planetary destruction","Superlaser beam effect","Debris field simulation","Emotional weight demands flawless execution"],capture:"All CG exterior. Shoot reactions on green screen with interactive lighting.",notes:"Defines the stakes. This shot CANNOT look cheap."},
+  {id:"13",slug:"INT. DEATH STAR — DETENTION",ie:"INT",dn:"DAY",pg:"2 6/8",ch:["LUKE","HAN SOLO","CHEWBACCA","LEIA","STORMTROOPERS"],cats:["weapons_combat"],cr:3,sr:3,shots:{min:6,l:10,max:16},sum:"Rescue of Princess Leia. Firefight in detention block. Escape into garbage chute.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Confined space stunt work","Pyro in enclosed set","Multiple blaster effect shots"],capture:"Pre-rig corridor with squib charges. Smoke machines for atmosphere.",notes:"Fast-paced action — coverage plan critical to avoid reshoots."},
+  {id:"14",slug:"INT. DEATH STAR — GARBAGE COMPACTOR",ie:"INT",dn:"DAY",pg:"2/8",ch:["LUKE","HAN SOLO","CHEWBACCA","LEIA"],cats:["water_work","creatures_animals"],cr:4,sr:4,shots:{min:4,l:8,max:12},sum:"Heroes trapped in garbage compactor. Dianoga creature attack. Walls closing in.",flags:{blue_green_screen:0,water_work:1,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical water work on set","Creature puppet in water","Moving wall mechanism","Actor safety in water/mechanical set"],capture:"Build practical compactor with hydraulic walls. Separate creature shoot. Safety divers standby.",notes:"Water work always overruns. Build 50% buffer. Waterproof creature puppet."},
+  {id:"15",slug:"INT. DEATH STAR — CHASM SWING",ie:"INT",dn:"DAY",pg:"1 2/8",ch:["LUKE","PRINCESS LEIA","STORMTROOPERS"],cats:["aerial_height","weapons_combat"],cr:4,sr:4,shots:{min:6,l:10,max:14},sum:"Luke and Leia swing across the chasm on a grappling line while under fire.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Wire stunt work at height","Green screen chasm extension","Grappling hook physics","Actor safety — fall protection critical"],capture:"Practical swing on wire rig against green screen. Separate clean plate for chasm extension.",notes:"Iconic moment. Rehearse wire stunt extensively. Stunt doubles for wides."},
+  {id:"16",slug:"INT. DEATH STAR — BEN VS VADER",ie:"INT",dn:"DAY",pg:"2 4/8",ch:["BEN KENOBI","DARTH VADER","LUKE","HAN","LEIA","CHEWBACCA"],cats:["weapons_combat","supernatural_magic","digital_augmentation"],cr:4,sr:4,shots:{min:12,l:18,max:26},sum:"Lightsaber duel. Ben sacrifices himself, disappearing into the Force.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Lightsaber effects throughout duel","Ben's disappearance — cloth drop with body removal","Emotional gravitas demands perfect take","Choreography timing with saber effects"],capture:"Reflective blade props for tracking. Shoot disappearance as practical cloth drop, enhance in post.",notes:"Pivotal death scene. Allow extra takes for emotion. Saber glow must match across all shots."},
+  {id:"17",slug:"EXT. SPACE — TRENCH RUN",ie:"EXT",dn:"NIGHT",pg:"6 4/8",ch:["LUKE","HAN","WEDGE","BIGGS","VADER","PILOTS"],cats:["vehicles_mech","weapons_combat","destruction_damage","aerial_height","digital_augmentation"],cr:5,sr:5,shots:{min:60,l:95,max:140},sum:"Climactic trench run. X-Wings and TIE Fighters dogfight. Luke fires killing shot. Death Star explodes.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:1},reasons:["Most VFX-intensive sequence in film","60-140 VFX shots","Full CG space environment","Multiple hero ship models","Destruction sim for Death Star","Cockpit green screen compositing","Cross-cutting 6+ storylines"],capture:"Build practical cockpits per hero pilot. Green screen for canopy views. Shoot all cockpit coverage before VFX completes. Detailed miniatures for hero destruction shots.",notes:"THE sequence. 40% of VFX budget here. Pre-vis every shot. Lock editorial before committing to final VFX."}
+];
+
+const COSTS = [
+  {sev:5,title:"Lightsaber Rotoscoping Volume",desc:"Every lightsaber shot requires frame-by-frame rotoscoping. Expect 150-200 individual effect shots — each needing 2-4 hours of artist time.",aff:"Scenes 9, 16, 17 + pickups"},
+  {sev:5,title:"Trench Run Pre-Vis & Editorial Lock",desc:"The trench run (60-140 shots) cannot begin final VFX until editorial is locked. Late changes cascade into massive rework costs. Budget 3 complete pre-vis iterations.",aff:"Scene 17"},
+  {sev:4,title:"Desert Location Weather Buffers",desc:"Tatooine exteriors are weather-dependent. Historical data suggests 30-40% of desert shoot days experience sand/wind delays. Standard 2-day buffer is insufficient.",aff:"Scenes 6, 8, 9"},
+  {sev:4,title:"Creature Makeup Overlap Scheduling",desc:"The cantina requires 20+ unique creature makeups (2-6 hours each). Schedule must account for makeup artist availability — cannot shoot all creatures same day.",aff:"Scene 10"},
+  {sev:4,title:"Droid Performance Coordination",desc:"R2-D2 (remote control) and C-3PO (suited performer) require 30% more takes than human actors. Budget extra time for any scene with both droids.",aff:"Scenes 3, 5, 6, 7, 14"},
+  {sev:3,title:"Water Work Overtime (Compactor)",desc:"Water-based practical effects consistently overrun by 40-60%. Drainage, reset time, actor dry-off breaks. Budget 50% more time than estimated.",aff:"Scene 14"},
+  {sev:3,title:"Twin Sunset Reshoots",desc:"The twin sunset shot has a 15-minute golden hour window. Expect 3+ attempts across different days. Each failed attempt costs a full company move.",aff:"Scene 8"}
+];
+
+const QS = [
+  {p:"critical",t:"What is the target VFX shot count for the trench run? The script supports 60-140 shots — at $5-15K per shot, this single sequence could range from $300K to $2.1M.",cat:"Budget",dept:"Producer"},
+  {p:"critical",t:"Will lightsaber blades be practical (LED) or fully post? Practical LEDs give interactive light on actors but limit choreography. Full post doubles rotoscoping costs.",cat:"Creative",dept:"VFX Supervisor"},
+  {p:"high",t:"Is Alderaan's destruction a hero moment or quick cut? A 3-second explosion vs 15-second destruction sequence has a 5x cost difference.",cat:"Editorial",dept:"Producer"},
+  {p:"high",t:"How many unique cantina aliens does the director want visible? Script implies 20+ but budget may only support 12-15 hero creatures with rest in shadow.",cat:"Budget",dept:"Producer"},
+  {p:"medium",t:"What is the plan for the landspeeder hover? Options: physical rig with wheel removal, CG vehicle replacement, or forced perspective. Each has different cost/quality tradeoffs.",cat:"Technical",dept:"VFX Supervisor"},
+  {p:"medium",t:"Will Ben's disappearance be practical cloth drop enhanced in post, or full CG dematerialization? Director's vision drives 10-20 VFX shots.",cat:"Creative",dept:"VFX Supervisor"},
+  {p:"low",t:"Are hologram effects meant lo-fi and practical, or polished and modern? Lo-fi is cheaper and arguably more charming.",cat:"Style",dept:"DP / Camera"}
+];
+
+// ================================================================
+// RENDER FUNCTIONS
+// ================================================================
+
+function renderExecSummary() {
+  const totalShots = S.reduce((a,s) => a + s.shots.l, 0);
+  const vfxScenes = S.filter(s => s.cats.length > 0).length;
+  const avgCost = (S.reduce((a,s) => a + s.cr, 0) / S.length).toFixed(1);
+  const minShots = S.reduce((a,s) => a + s.shots.min, 0);
+  const maxShots = S.reduce((a,s) => a + s.shots.max, 0);
+  const high = S.filter(s => s.cr >= 4).length;
+
+  document.getElementById('execSummary').innerHTML = `
+    <div class="exec-stat">
+      <div class="exec-val">${S.length}</div>
+      <div class="exec-label">Scenes</div>
+      <div class="exec-note">${vfxScenes} with VFX</div>
+    </div>
+    <div class="exec-stat">
+      <div class="exec-val">${totalShots}</div>
+      <div class="exec-label">Est. VFX Shots</div>
+      <div class="exec-note">${minShots}–${maxShots} range</div>
+    </div>
+    <div class="exec-stat">
+      <div class="exec-val" style="color:${RC_HEX[Math.round(parseFloat(avgCost))]}">${avgCost}</div>
+      <div class="exec-label">Avg Cost Risk</div>
+      <div class="exec-note">1–5 scale</div>
+    </div>
+    <div class="exec-stat">
+      <div class="exec-val" style="color:${RC_HEX[5]}">${high}</div>
+      <div class="exec-label">High Risk Scenes</div>
+      <div class="exec-note">cost ≥ 4</div>
+    </div>
+  `;
+}
+
+function renderTimeline() {
+  const bars = document.getElementById('timelineBars');
+  const labels = document.getElementById('timelineLabels');
+
+  bars.innerHTML = S.map(s => {
+    const pct = 20 + (s.cr / 5) * 80;
+    const loc = s.slug.split('—')[1]?.trim() || s.slug;
+    return `<div class="t-bar" style="height:${pct}%;background:${RC[s.cr]}">
+      <div class="t-bar-tip">
+        <strong>Scene ${s.id}</strong><br>
+        ${loc}<br>
+        Cost ${s.cr}/5 · Sched ${s.sr}/5 · ${s.shots.l} shots
+      </div>
+    </div>`;
+  }).join('');
+
+  labels.innerHTML = S.map(s => `<div class="t-label">${s.id}</div>`).join('');
+}
+
+function renderScenes() {
+  const el = document.getElementById('sceneSheets');
+  const maxShots = Math.max(...S.map(x => x.shots.max), 1);
+
+  el.innerHTML = S.map(s => {
+    const rangeL = (s.shots.min / maxShots) * 100;
+    const rangeW = ((s.shots.max - s.shots.min) / maxShots) * 100;
+    const likelyP = (s.shots.l / maxShots) * 100;
+
+    const chars = s.ch.length
+      ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${s.ch.map(c => `<span class="char-tag">${c}</span>`).join('')}</div></div>`
+      : '';
+
+    const cats = s.cats.length
+      ? `<div class="field"><div class="field-label">VFX Categories</div><div class="vfx-tags">${s.cats.map(c => {
+          const col = CC[c] || '#888';
+          return `<span class="vfx-tag" style="color:${col};border-color:${col}40;background:${col}0a"><span class="vfx-dot" style="background:${col}"></span>${CL[c]||c}</span>`;
+        }).join('')}</div></div>`
+      : '';
+
+    const flags = Object.entries(FN).map(([k,v]) =>
+      `<span class="s-flag${s.flags[k] ? ' on' : ''}">${v}</span>`
+    ).join('');
+
+    return `
+    <div class="scene-sheet" id="scene-${s.id}">
+      <div class="scene-head">
+        <span class="scene-number">${s.id}</span>
+        <span class="scene-slug">${s.slug}</span>
+        <div class="scene-meta-pills">
+          <span class="meta-pill">${s.ie}</span>
+          <span class="meta-pill">${s.dn}</span>
+          <span class="meta-pill">${s.pg} pg</span>
+          <span class="risk-badge" style="color:${RC[s.cr]};border-color:${RC[s.cr]};background:${RC[s.cr]}0a">COST ${s.cr}/5</span>
+          <span class="risk-badge" style="color:${RC[s.sr]};border-color:${RC[s.sr]};background:${RC[s.sr]}0a">SCHED ${s.sr}/5</span>
+        </div>
+      </div>
+      <div class="scene-body">
+        <div class="scene-col">
+          <div class="field">
+            <div class="field-label">Summary</div>
+            <div class="field-text">${s.sum}</div>
+          </div>
+          ${chars}
+          ${cats}
+          <div class="field">
+            <div class="field-label">VFX Shot Estimate</div>
+            <div class="shot-range">
+              <div class="shot-bar-bg">
+                <div class="shot-bar-fill" style="left:${rangeL}%;width:${rangeW}%;background:${RC[s.cr]}"></div>
+                <div class="shot-bar-mid" style="left:${likelyP}%"></div>
+              </div>
+              <div class="shot-labels"><span>${s.shots.min}</span><span class="likely">${s.shots.l} likely</span><span>${s.shots.max}</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="scene-col">
+          <div class="field">
+            <div class="field-label">Risk Reasons</div>
+            <ul class="reason-list">${s.reasons.map(r => `<li><span class="reason-bullet"></span>${r}</li>`).join('')}</ul>
+          </div>
+          <div class="field">
+            <div class="field-label">Suggested Capture</div>
+            <div class="callout callout-capture">${s.capture}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Notes for Producer</div>
+            <div class="callout callout-notes">${s.notes}</div>
+          </div>
+        </div>
+      </div>
+      <div class="scene-flags">${flags}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCosts() {
+  const sevColors = { 5: RC_HEX[5], 4: RC_HEX[4], 3: RC_HEX[3], 2: RC_HEX[2], 1: RC_HEX[1] };
+
+  document.getElementById('costItems').innerHTML = COSTS.map(c => {
+    const col = sevColors[c.sev] || RC_HEX[3];
+    return `
+    <div class="cost-item">
+      <div class="cost-sev-badge" style="color:${col};border-color:${col}30;background:${col}0a">${c.sev}</div>
+      <div class="cost-content">
+        <div class="cost-title">${c.title}</div>
+        <div class="cost-desc">${c.desc}</div>
+        <div class="cost-affected">Affects: ${c.aff}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuestions() {
+  const byDept = {};
+  QS.forEach(q => {
+    if (!byDept[q.dept]) byDept[q.dept] = [];
+    byDept[q.dept].push(q);
+  });
+
+  const pc = { critical: RC_HEX[5], high: RC_HEX[4], medium: RC_HEX[3], low: RC_HEX[1] };
+
+  document.getElementById('questionItems').innerHTML = Object.entries(byDept).map(([dept, qs]) => `
+    <div class="q-group">
+      <div class="q-group-label">For the ${dept}</div>
+      ${qs.map((q, i) => `
+        <div class="q-item">
+          <span class="q-marker">${i + 1}.</span>
+          <div class="q-text">${q.t}</div>
+          <span class="q-priority" style="color:${pc[q.p]};border-color:${pc[q.p]}30;background:${pc[q.p]}0a">${q.p}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+// ================================================================
+// NAV SCROLL HIGHLIGHTING
+// ================================================================
+function updateNav() {
+  const sections = ['summary', 'scenes', 'costs', 'questions'];
+  const scrollY = window.scrollY + 100;
+
+  let active = 'summary';
+  for (const id of sections) {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) active = id;
+  }
+
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + active);
+  });
+}
+window.addEventListener('scroll', updateNav, { passive: true });
+
+// ================================================================
+// INIT
+// ================================================================
+renderExecSummary();
+renderTimeline();
+renderScenes();
+renderCosts();
+renderQuestions();
+</script>
+</body>
+</html>
