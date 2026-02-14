@@ -38,6 +38,7 @@ class ParsedScene:
     action_lines: list[str] = field(default_factory=list)
     characters: list[str] = field(default_factory=list)
     vfx_triggers: list[VFXTrigger] = field(default_factory=list)
+    vfx_categories: list[str] = field(default_factory=list)
     page_start: int = 0
     page_end: int = 0
     word_count: int = 0

@@ -43,3 +43,32 @@ def test_multiple_triggers():
     categories = {t.category for t in triggers}
     assert "vehicles" in categories or "fire_pyro" in categories
     assert len(triggers) >= 2
+
+
+def test_detects_wire_removal():
+    text = "The actor is suspended from a wire harness above the set."
+    triggers = scan_for_vfx_triggers(text)
+    categories = {t.category for t in triggers}
+    assert "wire_removal_rigs" in categories
+
+
+def test_detects_screen_insert():
+    text = "She looks at the hologram projected from her phone screen."
+    triggers = scan_for_vfx_triggers(text)
+    categories = {t.category for t in triggers}
+    assert "screen_inserts" in categories
+
+
+def test_detects_green_screen():
+    text = "The actors stand in front of a green screen."
+    triggers = scan_for_vfx_triggers(text)
+    categories = {t.category for t in triggers}
+    assert "set_extensions" in categories
+
+
+def test_false_positive_screenplay():
+    """'Screenplay' should not trigger screen_inserts."""
+    text = "Based on the screenplay by John Smith."
+    triggers = scan_for_vfx_triggers(text)
+    categories = {t.category for t in triggers}
+    assert "screen_inserts" not in categories

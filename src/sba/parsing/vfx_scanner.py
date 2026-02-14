@@ -193,6 +193,113 @@ VFX_TRIGGER_TAXONOMY: dict[str, dict] = {
         ],
         "severity": "high",
     },
+    "wire_removal_rigs": {
+        "keywords": [
+            r"\bwire[sd]?\b",
+            r"\brig(?:s|ged|ging)?\b",
+            r"\bharness(?:es|ed)?\b",
+            r"\bsuspend(?:s|ed|ing)?\b",
+            r"\bpulley\b",
+            r"\bcable[sd]?\b",
+        ],
+        "exclusions": [
+            r"wire\s*(?:less|tap|transfer|fraud)",
+            r"rig\s*(?:orous|ht|id)",
+        ],
+        "severity": "medium",
+    },
+    "cleanup_paint": {
+        "keywords": [
+            r"\bremove[sd]?\s+(?:the\s+)?(?:rig|wire|crew|equipment)\b",
+            r"\bpaint\s*(?:out|fix)\b",
+            r"\bclean\s*(?:up|plate)\b",
+            r"\berase[sd]?\b",
+        ],
+        "exclusions": [
+            r"paint(?:ing|ed|brush|er|s)?\b(?!\s*(?:out|fix))",
+        ],
+        "severity": "low",
+    },
+    "screen_inserts": {
+        "keywords": [
+            r"\bscreen\b",
+            r"\bmonitor[sd]?\b",
+            r"\bphone\s*(?:screen|display)\b",
+            r"\btablet\s*(?:screen|display)\b",
+            r"\bTV\b",
+            r"\btelevision\b",
+            r"\blaptop\s*(?:screen|display)\b",
+            r"\bcomputer\s*(?:screen|display|monitor)\b",
+            r"\bhologram[sd]?\b",
+            r"\bHUD\b",
+            r"\bheads[\s-]?up\s*display\b",
+        ],
+        "exclusions": [
+            r"screen\s*(?:play|writer|writing|door)",
+        ],
+        "severity": "low",
+    },
+    "set_extensions": {
+        "keywords": [
+            r"\bgreen\s*screen\b",
+            r"\bblue\s*screen\b",
+            r"\bchroma\s*key\b",
+            r"\bbackdrop\b",
+            r"\bbackground\s+(?:plate|replace|extend)\b",
+            r"\bset\s+(?:extension|extend)\b",
+            r"\bvirtual\s+(?:set|production|wall|environment)\b",
+            r"\bLED\s*(?:wall|volume|stage)\b",
+        ],
+        "exclusions": [],
+        "severity": "medium",
+    },
+    "reflections_glass": {
+        "keywords": [
+            r"\bmirror[sd]?\b",
+            r"\breflect(?:s|ed|ing|ion[sd]?)?\b",
+            r"\bglass\b",
+            r"\bwindow[sd]?\b",
+        ],
+        "exclusions": [
+            r"glass\s*(?:of\s+(?:water|wine|milk|juice|beer))",
+            r"mirror\s*(?:ing|ed)\s+(?:his|her|the)\s+(?:action|move|expression)",
+            r"window\s+(?:seat|shade|blind|curtain|sill|pane|ledge|frame)",
+        ],
+        "severity": "low",
+    },
+    "beauty_retouching": {
+        "keywords": [
+            r"\bage[sd]?\b.*\b(?:prosthetic|makeup|digital)\b",
+            r"\bde[\s-]?ag(?:e[sd]?|ing)\b",
+            r"\byoung(?:er)?\s+version\b",
+            r"\bold(?:er)?\s+version\b",
+            r"\bblemish\b",
+            r"\bscar\s+(?:removal|cover|hide)\b",
+            r"\bskin\s+(?:smooth|retouch|fix|clean)\b",
+        ],
+        "exclusions": [],
+        "severity": "medium",
+    },
+    "rig_removal": {
+        "keywords": [
+            r"\bsafety\s*(?:wire|harness|rig|line|cable|net)\b",
+            r"\bstunt\s*(?:rig|wire|cable|harness|pad|mat)\b",
+            r"\bflying\s*(?:rig|harness|wire)\b",
+            r"\bcrash\s*(?:pad|mat)\b",
+        ],
+        "exclusions": [],
+        "severity": "medium",
+    },
+    "stabilization": {
+        "keywords": [
+            r"\bshak(?:y|ing)\s*(?:cam|camera|shot|footage)\b",
+            r"\bhand[\s-]?held\b",
+            r"\bsteadicam\b",
+            r"\bstabiliz(?:e[sd]?|ing|ation|er)\b",
+        ],
+        "exclusions": [],
+        "severity": "low",
+    },
 }
 
 

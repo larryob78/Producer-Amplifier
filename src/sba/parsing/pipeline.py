@@ -10,6 +10,7 @@ from sba.parsing.pdf_extractor import extract_text_from_pdf
 from sba.parsing.preprocessor import preprocess_script_text
 from sba.parsing.scene_parser import split_into_scenes
 from sba.parsing.text_extractor import extract_text_from_file
+from sba.parsing.vfx_mapper import map_triggers_to_categories
 from sba.parsing.vfx_scanner import scan_for_vfx_triggers
 
 
@@ -28,6 +29,10 @@ def parse_script_text(text: str, title: str = "") -> ParsedScript:
 
         # VFX trigger scanning
         scene.vfx_triggers = scan_for_vfx_triggers(scene.raw_text)
+
+        # Map trigger categories to VfxCategory enum values
+        trigger_cats = list({t.category for t in scene.vfx_triggers})
+        scene.vfx_categories = map_triggers_to_categories(trigger_cats)
 
     # Estimate pages (roughly 250 words per page for screenplays)
     total_words = sum(s.word_count for s in scenes)
