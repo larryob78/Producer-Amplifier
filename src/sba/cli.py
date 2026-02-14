@@ -68,14 +68,38 @@ def analyze(
     click.echo(f"Mode: {'Full RAG' if use_rag else 'RAG-lite (static corpus)'}")
     click.echo()
 
+    # Check API key before expensive work
+    from sba.config import ANTHROPIC_API_KEY, VOYAGE_API_KEY
+
+    if not ANTHROPIC_API_KEY:
+        click.echo(
+            "Error: ANTHROPIC_API_KEY not set.\n"
+            "Copy .env.example to .env and add your key:\n"
+            "  cp .env.example .env\n"
+            "  # Then edit .env with your Anthropic API key",
+            err=True,
+        )
+        sys.exit(1)
+
+    if use_rag and not VOYAGE_API_KEY:
+        click.echo(
+            "Error: VOYAGE_API_KEY not set (required for --use-rag mode).\n"
+            "Add your Voyage AI key to .env, or run without --use-rag for RAG-lite mode.",
+            err=True,
+        )
+        sys.exit(1)
+
     try:
         result = analyze_script(
             file_path=script_file,
             title=title,
             use_rag=use_rag,
         )
+    except RuntimeError as e:
+        click.echo(f"Analysis failed: {e}", err=True)
+        sys.exit(1)
     except Exception as e:
-        click.echo(f"Error during analysis: {e}", err=True)
+        click.echo(f"Unexpected error: {e}", err=True)
         sys.exit(1)
 
     # Export JSON
@@ -137,6 +161,16 @@ def index_corpus():
     from sba.rag.corpus_builder import build_corpus as _build_corpus
     from sba.rag.embedder import embed_chunks, get_voyage_client
     from sba.rag.vector_store import index_chunks
+
+    from sba.config import VOYAGE_API_KEY
+
+    if not VOYAGE_API_KEY:
+        click.echo(
+            "Error: VOYAGE_API_KEY not set.\n"
+            "Add your Voyage AI key to .env to use full RAG indexing.",
+            err=True,
+        )
+        sys.exit(1)
 
     click.echo("Building corpus chunks...")
     chunks = _build_corpus()
