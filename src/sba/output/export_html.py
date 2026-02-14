@@ -210,6 +210,7 @@ const costs = DATA.hidden_cost_radar || [];
 const qs = DATA.key_questions_for_team || {{}};
 
 function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
+function esc(s){{ if(typeof s!=='string')return String(s??''); return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }}
 
 // Exec summary
 !function(){{
@@ -234,9 +235,9 @@ function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
   bars.innerHTML = scenes.map(s => {{
     const cr = clamp(s.cost_risk_score||1,1,5);
     const pct = 20 + (cr/5)*80;
-    return `<div class="t-bar" style="height:${{pct}}%;background:${{RC[cr]}}"><div class="t-bar-tip"><strong>Scene ${{s.scene_id}}</strong><br>${{s.slugline}}<br>Cost ${{cr}}/5 · ${{s.vfx_shot_count_estimate?.likely||0}} shots</div></div>`;
+    return `<div class="t-bar" style="height:${{pct}}%;background:${{RC[cr]}}"><div class="t-bar-tip"><strong>Scene ${{esc(s.scene_id)}}</strong><br>${{esc(s.slugline)}}<br>Cost ${{cr}}/5 · ${{s.vfx_shot_count_estimate?.likely||0}} shots</div></div>`;
   }}).join('');
-  labels.innerHTML = scenes.map(s => `<div class="t-label">${{s.scene_id}}</div>`).join('');
+  labels.innerHTML = scenes.map(s => `<div class="t-label">${{esc(s.scene_id)}}</div>`).join('');
 }}();
 
 // Scenes
@@ -250,20 +251,20 @@ function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
     const rangeL = (est.min/maxS)*100;
     const rangeW = ((est.max-est.min)/maxS)*100;
     const likelyP = (est.likely/maxS)*100;
-    const chars = (s.characters||[]).length ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${{(s.characters||[]).map(c=>`<span class="char-tag">${{c}}</span>`).join('')}}</div></div>` : '';
-    const cats = (s.vfx_categories||[]).length ? `<div class="field"><div class="field-label">VFX Categories</div><div class="vfx-tags">${{(s.vfx_categories||[]).map(c=>`<span class="vfx-tag" style="color:var(--text-3);border-color:var(--rule-strong);background:var(--surface-3)"><span class="vfx-dot" style="background:var(--text-3)"></span>${{c}}</span>`).join('')}}</div></div>` : '';
-    const reasons = (s.risk_reasons||[]).map(r=>`<li><span class="reason-bullet"></span>${{r}}</li>`).join('');
-    const capture = (s.suggested_capture||[]).join('. ');
-    const notes = Array.isArray(s.notes_for_producer) ? s.notes_for_producer.join(' ') : (s.notes_for_producer||'');
+    const chars = (s.characters||[]).length ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${{(s.characters||[]).map(c=>`<span class="char-tag">${{esc(c)}}</span>`).join('')}}</div></div>` : '';
+    const cats = (s.vfx_categories||[]).length ? `<div class="field"><div class="field-label">VFX Categories</div><div class="vfx-tags">${{(s.vfx_categories||[]).map(c=>`<span class="vfx-tag" style="color:var(--text-3);border-color:var(--rule-strong);background:var(--surface-3)"><span class="vfx-dot" style="background:var(--text-3)"></span>${{esc(c)}}</span>`).join('')}}</div></div>` : '';
+    const reasons = (s.risk_reasons||[]).map(r=>`<li><span class="reason-bullet"></span>${{esc(r)}}</li>`).join('');
+    const capture = (s.suggested_capture||[]).map(c=>esc(c)).join('. ');
+    const notes = Array.isArray(s.notes_for_producer) ? s.notes_for_producer.map(n=>esc(n)).join(' ') : esc(s.notes_for_producer||'');
     const flags = s.production_flags || {{}};
-    const flagHTML = Object.entries(flags).map(([k,v])=>`<span class="s-flag${{v?' on':''}}">${{k.replace(/_/g,' ')}}</span>`).join('');
-    return `<div class="scene-sheet" id="scene-${{s.scene_id}}">
+    const flagHTML = Object.entries(flags).map(([k,v])=>`<span class="s-flag${{v?' on':''}}">${{esc(k.replace(/_/g,' '))}}</span>`).join('');
+    return `<div class="scene-sheet" id="scene-${{esc(s.scene_id)}}">
       <div class="scene-head">
-        <span class="scene-number">${{s.scene_id}}</span>
-        <span class="scene-slug">${{s.slugline}}</span>
+        <span class="scene-number">${{esc(s.scene_id)}}</span>
+        <span class="scene-slug">${{esc(s.slugline)}}</span>
         <div class="scene-meta-pills">
-          <span class="meta-pill">${{s.int_ext||'—'}}</span>
-          <span class="meta-pill">${{s.day_night||'—'}}</span>
+          <span class="meta-pill">${{esc(s.int_ext||'—')}}</span>
+          <span class="meta-pill">${{esc(s.day_night||'—')}}</span>
           <span class="meta-pill">${{s.page_count_eighths||0}}/8 pg</span>
           <span class="risk-badge" style="color:${{RC[cr]}};border-color:${{RC[cr]}};background:${{RC[cr]}}0a">COST ${{cr}}/5</span>
           <span class="risk-badge" style="color:${{RC[sr]}};border-color:${{RC[sr]}};background:${{RC[sr]}}0a">SCHED ${{sr}}/5</span>
@@ -271,7 +272,7 @@ function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
       </div>
       <div class="scene-body">
         <div class="scene-col">
-          <div class="field"><div class="field-label">Summary</div><div class="field-text">${{s.scene_summary||''}}</div></div>
+          <div class="field"><div class="field-label">Summary</div><div class="field-text">${{esc(s.scene_summary||'')}}</div></div>
           ${{chars}}
           ${{cats}}
           <div class="field"><div class="field-label">VFX Shot Estimate</div><div class="shot-range"><div class="shot-bar-bg"><div class="shot-bar-fill" style="left:${{rangeL}}%;width:${{rangeW}}%;background:${{RC[cr]}}"></div><div class="shot-bar-mid" style="left:${{likelyP}}%"></div></div><div class="shot-labels"><span>${{est.min}}</span><span class="likely">${{est.likely}} likely</span><span>${{est.max}}</span></div></div></div>
@@ -293,7 +294,7 @@ function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
   document.getElementById('costItems').innerHTML = costs.map(c => {{
     const col = sevMap[c.severity] || RH[3];
     const sev = {{critical:5,high:4,medium:3,low:1}}[c.severity]||3;
-    return `<div class="cost-item"><div class="cost-sev-badge" style="color:${{col}};border-color:${{col}}30;background:${{col}}0a">${{sev}}</div><div class="cost-content"><div class="cost-title">${{c.flag}}</div><div class="cost-desc">${{c.why_it_matters}}</div><div class="cost-affected">Affects: ${{(c.where||[]).join(', ')}}</div></div></div>`;
+    return `<div class="cost-item"><div class="cost-sev-badge" style="color:${{col}};border-color:${{col}}30;background:${{col}}0a">${{sev}}</div><div class="cost-content"><div class="cost-title">${{esc(c.flag)}}</div><div class="cost-desc">${{esc(c.why_it_matters)}}</div><div class="cost-affected">Affects: ${{(c.where||[]).map(w=>esc(w)).join(', ')}}</div></div></div>`;
   }}).join('');
 }}();
 
@@ -303,7 +304,7 @@ function clamp(v,lo,hi){{ return Math.max(lo,Math.min(hi,v)); }}
   document.getElementById('questionItems').innerHTML = depts.map(([key,label]) => {{
     const items = qs[key] || [];
     if (!items.length) return '';
-    return `<div class="q-group"><div class="q-group-label">For the ${{label}}</div>${{items.map((q,i)=>`<div class="q-item"><span class="q-marker">${{i+1}}.</span><div class="q-text">${{q}}</div></div>`).join('')}}</div>`;
+    return `<div class="q-group"><div class="q-group-label">For the ${{esc(label)}}</div>${{items.map((q,i)=>`<div class="q-item"><span class="q-marker">${{i+1}}.</span><div class="q-text">${{esc(q)}}</div></div>`).join('')}}</div>`;
   }}).join('');
 }}();
 

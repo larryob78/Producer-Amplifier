@@ -121,3 +121,74 @@ def export_scenes_csv_string(breakdown: BreakdownOutput) -> str:
     for scene in breakdown.scenes:
         writer.writerow(_scene_to_row(scene))
     return output.getvalue()
+
+
+def _pipe_join_full(items: list[str]) -> str:
+    """Join ALL list items with pipe delimiter (no truncation)."""
+    return "|".join(items)
+
+
+def _scene_to_row_full(scene: Scene) -> dict[str, str]:
+    """Convert a Scene to a flat CSV row with NO truncation."""
+    flags = scene.production_flags
+    active_flags = [
+        name
+        for name, val in [
+            ("stunts", flags.stunts),
+            ("creatures", flags.creatures),
+            ("vehicles", flags.vehicles),
+            ("crowds", flags.crowds),
+            ("water", flags.water),
+            ("fire_smoke", flags.fire_smoke),
+            ("destruction", flags.destruction),
+            ("weather", flags.weather),
+            ("complex_lighting", flags.complex_lighting),
+            ("space_or_zero_g", flags.space_or_zero_g),
+            ("heavy_costume_makeup", flags.heavy_costume_makeup),
+        ]
+        if val
+    ]
+
+    return {
+        "scene_id": scene.scene_id,
+        "slugline": scene.slugline,
+        "int_ext": scene.int_ext,
+        "day_night": scene.day_night,
+        "page_count_eighths": str(scene.page_count_eighths),
+        "location_type": scene.location_type,
+        "characters": _pipe_join_full(scene.characters),
+        "scene_summary": scene.scene_summary,
+        "vfx_categories": _pipe_join_full([c.value for c in scene.vfx_categories]),
+        "vfx_triggers": _pipe_join_full(scene.vfx_triggers),
+        "production_flags": _pipe_join_full(active_flags),
+        "vfx_shots_min": str(scene.vfx_shot_count_estimate.min),
+        "vfx_shots_likely": str(scene.vfx_shot_count_estimate.likely),
+        "vfx_shots_max": str(scene.vfx_shot_count_estimate.max),
+        "invisible_vfx": scene.invisible_vfx_likelihood,
+        "cost_risk": str(scene.cost_risk_score),
+        "schedule_risk": str(scene.schedule_risk_score),
+        "risk_reasons": _pipe_join_full(scene.risk_reasons),
+        "suggested_capture": _pipe_join_full(scene.suggested_capture),
+        "notes_for_producer": _pipe_join_full(
+            scene.notes_for_producer
+            if isinstance(scene.notes_for_producer, list)
+            else [scene.notes_for_producer]
+        ),
+        "uncertainties": _pipe_join_full(scene.uncertainties),
+    }
+
+
+def export_scenes_csv_full(breakdown: BreakdownOutput, output_path: Path) -> Path:
+    """Export scene breakdown to CSV with NO truncation of array fields.
+
+    Returns the path to the written file.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+        writer.writeheader()
+        for scene in breakdown.scenes:
+            writer.writerow(_scene_to_row_full(scene))
+
+    return output_path

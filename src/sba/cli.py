@@ -289,6 +289,52 @@ def export_html_cmd(json_path: str, output: str | None):
     click.echo(f"HTML exported: {html_path}")
 
 
+@cli.command(name="export-csv-full")
+@click.argument("json_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output CSV path. Defaults to same directory as JSON.",
+)
+def export_csv_full(json_path: str, output: str | None):
+    """Export a breakdown JSON file to CSV with NO truncation."""
+    from sba.output.export_csv import export_scenes_csv_full
+    from sba.output.schema import BreakdownOutput
+
+    json_file = Path(json_path)
+    data = json.loads(json_file.read_text(encoding="utf-8"))
+    breakdown = BreakdownOutput.model_validate(data)
+
+    csv_path = Path(output) if output else json_file.with_suffix(".full.csv")
+    export_scenes_csv_full(breakdown, csv_path)
+    click.echo(f"CSV (full) exported: {csv_path}")
+
+
+@cli.command(name="export-xlsx")
+@click.argument("json_path", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output XLSX path. Defaults to same directory as JSON.",
+)
+def export_xlsx_cmd(json_path: str, output: str | None):
+    """Export a breakdown JSON file to XLSX workbook."""
+    from sba.output.export_xlsx import export_xlsx
+    from sba.output.schema import BreakdownOutput
+
+    json_file = Path(json_path)
+    data = json.loads(json_file.read_text(encoding="utf-8"))
+    breakdown = BreakdownOutput.model_validate(data)
+
+    xlsx_path = Path(output) if output else json_file.with_suffix(".xlsx")
+    export_xlsx(breakdown, xlsx_path)
+    click.echo(f"XLSX exported: {xlsx_path}")
+
+
 def main():
     """Entry point for the CLI."""
     cli()

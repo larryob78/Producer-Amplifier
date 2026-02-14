@@ -128,41 +128,64 @@ def _retrieve_rag_context(parsed: ParsedScript) -> str:
     """Use the full RAG pipeline to retrieve relevant context.
 
     Retrieves based on detected VFX trigger categories from parsing.
+    Falls back to static corpus on any error.
     """
-    from sba.rag.corpus_builder import build_corpus
-    from sba.rag.embedder import get_voyage_client
-    from sba.rag.retriever import HybridRetriever
-    from sba.rag.vector_store import get_or_create_collection
+    import logging
 
-    # Collect unique VFX categories from all scenes
-    vfx_categories: set[str] = set()
-    for scene in parsed.scenes:
-        for trigger in scene.vfx_triggers:
-            vfx_categories.add(trigger.category)
+    logger = logging.getLogger(__name__)
 
-    if not vfx_categories:
-        # Fall back to full corpus if no triggers detected
+    try:
+        from sba.rag.corpus_builder import build_corpus
+        from sba.rag.embedder import get_voyage_client
+        from sba.rag.retriever import HybridRetriever
+        from sba.rag.vector_store import get_or_create_collection
+
+        # Collect unique VFX categories from all scenes
+        vfx_categories: set[str] = set()
+        for scene in parsed.scenes:
+            for trigger in scene.vfx_triggers:
+                vfx_categories.add(trigger.category)
+
+        if not vfx_categories:
+            # Fall back to full corpus if no triggers detected
+            return load_corpus_as_text()
+
+        # Build retriever
+        chunks = build_corpus()
+        collection = get_or_create_collection()
+
+        # Check for empty collection
+        if collection.count() == 0:
+            logger.warning(
+                "ChromaDB collection is empty. Run 'sba index-corpus' first. "
+                "Falling back to static corpus."
+            )
+            return load_corpus_as_text()
+
+        voyage_client = get_voyage_client()
+        retriever = HybridRetriever(
+            chunks=chunks,
+            collection=collection,
+            voyage_client=voyage_client,
+        )
+
+        # Retrieve for detected categories
+        results = retriever.retrieve_for_categories(list(vfx_categories))
+
+        if not results:
+            logger.warning("RAG retrieval returned no results. Falling back to static corpus.")
+            return load_corpus_as_text()
+
+        # Format as context text
+        parts = []
+        for chunk in results:
+            parts.append(f"[{chunk.source_file} > {chunk.section_title}]\n{chunk.text}")
+
+        return "\n\n---\n\n".join(parts)
+
+    except Exception as e:
+        logger.warning("RAG retrieval failed: %s. Falling back to static corpus.", e)
         return load_corpus_as_text()
-
-    # Build retriever
-    chunks = build_corpus()
-    collection = get_or_create_collection()
-    voyage_client = get_voyage_client()
-    retriever = HybridRetriever(
-        chunks=chunks,
-        collection=collection,
-        voyage_client=voyage_client,
-    )
-
-    # Retrieve for detected categories
-    results = retriever.retrieve_for_categories(list(vfx_categories))
-
-    # Format as context text
-    parts = []
-    for chunk in results:
-        parts.append(f"[{chunk.source_file} > {chunk.section_title}]\n{chunk.text}")
-
-    return "\n\n---\n\n".join(parts)
 
 
 def analyze_script_staged(

@@ -20,7 +20,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=24.0", "isort>=5.0", "ruff>=0.4", "pre-commit>=3.0"]
+xlsx = ["openpyxl>=3.1.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=24.0", "isort>=5.0", "ruff>=0.4", "pre-commit>=3.0", "openpyxl>=3.1.0"]
 
 [project.scripts]
 sba = "sba.cli:main"
