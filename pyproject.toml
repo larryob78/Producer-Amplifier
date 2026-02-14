@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "script-breakdown-assistant"
+version = "0.1.0"
+description = "Intelligent script breakdown assistant for film producers"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40.0",
+    "pdfplumber>=0.10.0",
+    "pydantic>=2.0",
+    "chromadb>=0.5.0",
+    "voyageai>=0.3.0",
+    "rank-bm25>=0.2.0",
+    "json-repair>=0.28.0",
+    "click>=8.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[project.scripts]
+sba = "sba.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
