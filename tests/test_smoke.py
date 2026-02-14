@@ -18,7 +18,7 @@ def _mock_claude_response() -> str:
     return json.dumps(
         {
             "project_summary": {
-                "project_title": "Star Wars Excerpt",
+                "project_title": "Signal Lost Excerpt",
                 "date_analyzed": "2026-02-14T00:00:00Z",
                 "analysis_scope": "excerpt",
                 "script_pages_estimate": 2,
@@ -33,13 +33,13 @@ def _mock_claude_response() -> str:
             "scenes": [
                 {
                     "scene_id": "1",
-                    "slugline": "INT. DEATH STAR - CORRIDOR - DAY",
+                    "slugline": "INT. ABANDONED WAREHOUSE - NIGHT",
                     "int_ext": "int",
-                    "day_night": "day",
+                    "day_night": "night",
                     "page_count_eighths": 2,
                     "location_type": "stage",
-                    "characters": ["VADER", "OFFICER"],
-                    "scene_summary": "Stormtroopers march as an explosion rocks the Death Star corridor.",
+                    "characters": ["DETECTIVE REYES", "OFFICER CHEN"],
+                    "scene_summary": "SWAT team breaches a warehouse rigged with explosives.",
                     "vfx_triggers": ["explosion", "smoke"],
                     "production_flags": {"fire_smoke": True, "destruction": True},
                     "vfx_categories": ["fx_explosion", "fx_smoke_dust", "set_extension"],
@@ -53,14 +53,14 @@ def _mock_claude_response() -> str:
                 },
                 {
                     "scene_id": "2",
-                    "slugline": "EXT. TATOOINE - DESERT - DAY",
+                    "slugline": "EXT. MOUNTAIN HIGHWAY - DAY",
                     "int_ext": "ext",
                     "day_night": "day",
                     "page_count_eighths": 2,
                     "location_type": "ext_location",
-                    "characters": ["LUKE"],
-                    "scene_summary": "Luke races across the desert in a speeder under twin suns.",
-                    "vfx_triggers": ["speeder", "twin suns"],
+                    "characters": ["MAYA"],
+                    "scene_summary": "High-speed car chase along cliff-edge highway with helicopter pursuit.",
+                    "vfx_triggers": ["helicopter", "vehicles"],
                     "production_flags": {"vehicles": True},
                     "vfx_categories": ["cg_vehicle", "sky_replacement", "set_extension"],
                     "vfx_shot_count_estimate": {"min": 4, "likely": 6, "max": 10},
@@ -68,22 +68,22 @@ def _mock_claude_response() -> str:
                     "cost_risk_score": 4,
                     "schedule_risk_score": 3,
                     "risk_reasons": [
-                        "CG speeder compositing",
-                        "Twin sun sky replacement on every shot",
+                        "CG car tumble compositing",
+                        "Helicopter aerial coordination",
                     ],
                     "suggested_capture": ["HDRI on location", "Chrome ball ref"],
-                    "notes_for_producer": ["Every exterior needs twin sun sky work."],
+                    "notes_for_producer": ["Every exterior needs consistent sky work."],
                 },
                 {
                     "scene_id": "3",
-                    "slugline": "INT. REBEL BASE - COMMAND CENTER - NIGHT",
+                    "slugline": "INT. CONTROL ROOM - NIGHT",
                     "int_ext": "int",
                     "day_night": "night",
                     "page_count_eighths": 3,
                     "location_type": "stage",
                     "characters": [],
-                    "scene_summary": "Hundreds of rebels study holographic displays in the command center.",
-                    "vfx_triggers": ["holographic displays", "hundreds of soldiers"],
+                    "scene_summary": "Dozens of technicians monitor screens as warning lights flash.",
+                    "vfx_triggers": ["monitor screens", "dozens of technicians"],
                     "production_flags": {"crowds": True, "complex_lighting": True},
                     "vfx_categories": ["crowd_sim", "screen_insert", "comp"],
                     "vfx_shot_count_estimate": {"min": 5, "likely": 8, "max": 12},
@@ -91,8 +91,8 @@ def _mock_claude_response() -> str:
                     "cost_risk_score": 4,
                     "schedule_risk_score": 3,
                     "risk_reasons": [
-                        "Crowd multiplication for rebel soldiers",
-                        "Holographic screen inserts on every display",
+                        "Crowd multiplication for technicians",
+                        "Screen inserts on every display",
                     ],
                     "suggested_capture": ["Tracking markers", "Clean plates"],
                     "notes_for_producer": ["Budget crowd tiling passes."],
@@ -100,18 +100,18 @@ def _mock_claude_response() -> str:
             ],
             "hidden_cost_radar": [
                 {
-                    "flag": "Invisible sky work accumulation",
+                    "flag": "Accumulating screen insert work",
                     "severity": "medium",
-                    "where": ["2"],
-                    "why_it_matters": "Every Tatooine exterior requires twin sun sky replacement.",
-                    "mitigation_ideas": ["Shoot golden hour to minimize sky fixes"],
+                    "where": ["3"],
+                    "why_it_matters": "Every control room shot requires screen content compositing.",
+                    "mitigation_ideas": ["Pre-produce screen content before shoot"],
                 }
             ],
             "key_questions_for_team": {
-                "for_producer": ["Is the speeder practical or fully CG?"],
+                "for_producer": ["Is the car tumble practical stunt or fully CG?"],
                 "for_vfx_supervisor": ["Crowd approach: tiling or digital?"],
                 "for_dp_camera": ["Need consistent HDRI capture on all exteriors"],
-                "for_locations_art_dept": ["Desert location scouting for Tatooine"],
+                "for_locations_art_dept": ["Mountain highway location scouting"],
             },
         }
     )
@@ -128,12 +128,12 @@ def test_full_pipeline_smoke(mock_claude, mock_client):
 
     result = analyze_script(
         file_path=FIXTURES_DIR / "test_excerpt.txt",
-        title="Star Wars Excerpt",
+        title="Signal Lost Excerpt",
     )
 
     assert isinstance(result, BreakdownOutput)
     assert len(result.scenes) == 3
-    assert result.scenes[0].slugline == "INT. DEATH STAR - CORRIDOR - DAY"
+    assert result.scenes[0].slugline == "INT. ABANDONED WAREHOUSE - NIGHT"
     assert result.global_flags.overall_vfx_heaviness == "high"
     assert len(result.hidden_cost_radar) >= 1
 
@@ -156,7 +156,7 @@ def test_full_pipeline_exports(mock_claude, mock_client, tmp_path):
 
     result = analyze_script(
         file_path=FIXTURES_DIR / "test_excerpt.txt",
-        title="Star Wars Excerpt",
+        title="Signal Lost Excerpt",
     )
 
     # CSV
@@ -164,7 +164,7 @@ def test_full_pipeline_exports(mock_claude, mock_client, tmp_path):
     export_scenes_csv(result, csv_path)
     assert csv_path.exists()
     csv_content = csv_path.read_text()
-    assert "DEATH STAR" in csv_content
+    assert "WAREHOUSE" in csv_content
 
     # HTML
     html_path = tmp_path / "test.html"

@@ -4,53 +4,53 @@ from sba.parsing.pipeline import parse_script_text
 
 
 def test_full_pipeline_from_text():
-    script = """INT. DEATH STAR - CORRIDOR - DAY
+    script = """INT. ABANDONED WAREHOUSE - NIGHT
 
-Stormtroopers march through the corridor. An EXPLOSION rocks the station. Smoke fills the air.
+SWAT officers stack up by the door. An EXPLOSION blows out the windows. Smoke and debris fill the air.
 
-VADER
-I find your lack of faith disturbing.
+DETECTIVE REYES
+Everyone get down! The whole place is rigged!
 
-OFFICER
-Yes, Lord Vader.
+OFFICER CHEN
+Copy that. Moving to secondary entry.
 
-EXT. TATOOINE - DESERT - DAY
+EXT. MOUNTAIN HIGHWAY - DAY
 
-Twin suns beat down on the endless sand. A SPEEDER races across the dunes.
+A black sedan races along the cliff edge. A HELICOPTER swoops low overhead, matching speed.
 
-LUKE
-I was going to Tosche Station to pick up some power converters!
+MAYA
+They found us. Punch it — take the next exit!
 
-INT. REBEL BASE - COMMAND CENTER - NIGHT
+INT. CONTROL ROOM - NIGHT
 
-Hundreds of REBEL SOLDIERS study holographic displays. The room buzzes with tension.
+Dozens of TECHNICIANS monitor banks of screens. Warning lights flash. The room buzzes with tension.
 
-LEIA
-The Empire is coming. We must prepare.
+DIRECTOR WARD
+The signal is broadcasting. We have six minutes to shut it down.
 """
-    result = parse_script_text(script, title="Star Wars Test")
-    assert result.title == "Star Wars Test"
+    result = parse_script_text(script, title="Signal Lost Test")
+    assert result.title == "Signal Lost Test"
     assert len(result.scenes) == 3
 
     # Scene 1: explosion + smoke = fire_pyro triggers
     s1 = result.scenes[0]
     assert s1.int_ext == "int"
-    assert "VADER" in s1.characters
-    assert "OFFICER" in s1.characters
+    assert "DETECTIVE REYES" in s1.characters
+    assert "OFFICER CHEN" in s1.characters
     trigger_cats = {t.category for t in s1.vfx_triggers}
     assert len(trigger_cats) > 0  # Should detect explosion/smoke
 
     # Scene 2
     s2 = result.scenes[1]
     assert s2.int_ext == "ext"
-    assert "LUKE" in s2.characters
+    assert "MAYA" in s2.characters
 
     # Scene 3: crowds
     s3 = result.scenes[2]
     assert s3.day_night == "night"
-    assert "LEIA" in s3.characters
+    assert "DIRECTOR WARD" in s3.characters
 
     # All characters found
-    assert "VADER" in result.all_characters
-    assert "LUKE" in result.all_characters
-    assert "LEIA" in result.all_characters
+    assert "DETECTIVE REYES" in result.all_characters
+    assert "MAYA" in result.all_characters
+    assert "DIRECTOR WARD" in result.all_characters

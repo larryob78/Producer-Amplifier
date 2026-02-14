@@ -41,7 +41,7 @@ def test_build_full_corpus():
     assert "cost_rules.md" in source_files
     assert "capture_checklist.md" in source_files
     # Should have gold example chunks
-    assert any("death_star" in c.source_file for c in chunks)
+    assert any("warehouse_explosion" in c.source_file for c in chunks)
 
 
 def test_load_corpus_as_text():

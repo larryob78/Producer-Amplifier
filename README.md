@@ -1,6 +1,6 @@
-# Script Breakdown Assistant (SBA)
+# Napkin — Producer Amplifier
 
-AI-powered VFX script breakdown tool for film producers. Parses screenplays (PDF or plain text), uses Claude to produce scene-by-scene VFX analysis with shot count estimates, cost/schedule risk scores, hidden cost flags, and department-specific questions. Outputs JSON, CSV, and a self-contained HTML production bible.
+**Script Breakdown Assistant** — AI-powered VFX script breakdown tool for film producers. Parses screenplays (PDF, DOCX, or plain text), uses Claude to produce scene-by-scene VFX analysis with shot count estimates, cost/schedule risk scores, hidden cost flags, and department-specific questions. Outputs JSON, CSV, and a self-contained HTML production bible.
 
 ## Quick Start
 
@@ -15,23 +15,26 @@ pip install -e ".[dev]"
 cp .env.example .env
 # Edit .env and add your Anthropic API key
 
-sba analyze myscript.pdf --title "My Film"
+napkin analyze myscript.pdf --title "My Film"
 ```
 
 ## CLI Commands
 
 | Command | Description | Key Flags |
 |---------|-------------|-----------|
-| `sba analyze SCRIPT` | Full VFX breakdown analysis | `--title`, `--output-dir`, `--model`, `--use-rag`, `--json-only` |
-| `sba build-corpus` | Display corpus statistics | |
-| `sba index-corpus` | Index corpus into ChromaDB for full RAG | Requires `VOYAGE_API_KEY` |
-| `sba export-csv JSON` | Export breakdown JSON to CSV | `--output` |
-| `sba export-html-cmd JSON` | Export breakdown JSON to HTML | `--output` |
+| `napkin analyze SCRIPT` | Full VFX breakdown analysis | `--title`, `--output-dir`, `--model`, `--use-rag`, `--json-only`, `--staged` |
+| `napkin build-corpus` | Display corpus statistics | |
+| `napkin index-corpus` | Index corpus into ChromaDB for full RAG | Requires `VOYAGE_API_KEY` |
+| `napkin export-csv JSON` | Export breakdown JSON to CSV | `--output` |
+| `napkin export-html-cmd JSON` | Export breakdown JSON to HTML | `--output` |
+| `napkin export-xlsx JSON` | Export breakdown JSON to Excel | `--output` |
+
+> **Note:** The `sba` command is also available as an alias.
 
 ## Architecture
 
 ```
-PDF/Text → Parsing Pipeline → RAG Context → Claude API → Pydantic Validation → JSON/CSV/HTML
+PDF/DOCX/Text → Parsing Pipeline → RAG Context → Claude API → Pydantic Validation → JSON/CSV/HTML
 ```
 
 | Package | Role |
@@ -72,7 +75,7 @@ pytest --cov=sba          # With coverage
 
 ## Output Files
 
-After running `sba analyze`, the `output/` directory contains:
+After running `napkin analyze`, the `output/` directory contains:
 
 - `{title}_{timestamp}.json` — Full structured breakdown (Pydantic-validated)
 - `{title}_{timestamp}.csv` — Flat scene table for spreadsheets

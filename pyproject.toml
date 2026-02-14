@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "script-breakdown-assistant"
+name = "napkin-producer-amplifier"
 version = "0.1.0"
-description = "Intelligent script breakdown assistant for film producers"
+description = "Napkin — Producer Amplifier: AI-powered VFX script breakdown for film producers"
 requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.40.0",
@@ -17,6 +17,7 @@ dependencies = [
     "json-repair>=0.28.0",
     "click>=8.0",
     "python-dotenv>=1.0",
+    "python-docx>=1.1.0",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +26,7 @@ dev = ["pytest>=7.0", "pytest-cov>=4.0", "black>=24.0", "isort>=5.0", "ruff>=0.4
 
 [project.scripts]
 sba = "sba.cli:main"
+napkin = "sba.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

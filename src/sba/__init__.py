@@ -1,1 +1,1 @@
-"""Script Breakdown Assistant — VFX-aware screenplay analysis tool."""
+"""Napkin — Producer Amplifier (Script Breakdown Assistant)."""

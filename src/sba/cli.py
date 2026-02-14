@@ -1,4 +1,4 @@
-"""CLI interface for the Script Breakdown Assistant."""
+"""CLI interface for Napkin — Producer Amplifier (Script Breakdown Assistant)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from sba.config import DEFAULT_OUTPUT_DIR
 @click.group()
 @click.version_option(version="0.1.0", prog_name="sba")
 def cli():
-    """Script Breakdown Assistant — AI-powered VFX breakdown for producers."""
+    """Napkin — Producer Amplifier · AI-powered VFX breakdown for producers."""
     pass
 
 
