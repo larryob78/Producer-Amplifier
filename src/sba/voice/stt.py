@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import httpx
 from pathlib import Path
+
+import httpx
 
 from sba.config import OPENAI_API_KEY
 

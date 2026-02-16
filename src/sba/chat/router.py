@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import asdict
 from typing import Any
 
 import anthropic
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from sba.config import ANTHROPIC_API_KEY
 from sba.chat.model_router import RouteDecision, route_query
 from sba.chat.system_prompt import build_system_prompt
 from sba.chat.tools import TOOL_DEFINITIONS, execute_tool
+from sba.config import ANTHROPIC_API_KEY
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 

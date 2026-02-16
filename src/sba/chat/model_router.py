@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 
-from sba.config import CLAUDE_MODEL_HAIKU, CLAUDE_MODEL_SONNET, CLAUDE_MODEL_OPUS
+from sba.config import CLAUDE_MODEL_HAIKU, CLAUDE_MODEL_OPUS, CLAUDE_MODEL_SONNET
 
 
 class QueryTier(Enum):

@@ -120,12 +120,12 @@ def get_budget_summary() -> dict[str, Any]:
     ws = wb["Top Sheet"]
 
     sections = {}
-    current_section = None
+    _current_section = None
     grand_budget = 0
     grand_actual = 0
 
     for row in range(1, ws.max_row + 1):
-        col_a = ws.cell(row=row, column=1).value
+        _col_a = ws.cell(row=row, column=1).value  # noqa: F841
         col_b = ws.cell(row=row, column=2).value
         col_c = ws.cell(row=row, column=3).value
         col_d = ws.cell(row=row, column=4).value

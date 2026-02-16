@@ -7,13 +7,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from sba.parsing.character_parser import extract_characters_from_text
 from sba.parsing.models import ParsedScript
+from sba.parsing.pdf_extractor import extract_text_from_pdf
 from sba.parsing.preprocessor import preprocess_script_text
 from sba.parsing.scene_parser import split_into_scenes
-from sba.parsing.character_parser import extract_characters_from_text
-from sba.parsing.vfx_scanner import scan_for_vfx_triggers
-from sba.parsing.pdf_extractor import extract_text_from_pdf
 from sba.parsing.text_extractor import extract_text_from_file
+from sba.parsing.vfx_scanner import scan_for_vfx_triggers
 
 # Supported file extensions
 SUPPORTED_FORMATS = {".pdf", ".txt", ".text", ".docx", ".doc", ".fdx", ".rtf", ".fountain"}
