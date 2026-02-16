@@ -1860,20 +1860,135 @@ function renderAll() {
 }
 
 
+function showStatus(message, type) {
+  var el = document.getElementById('statusLine');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'statusLine';
+    el.style.cssText = 'text-align:center;font-family:var(--mono);font-size:12px;padding:8px 0;';
+    var title = document.querySelector('.title-block');
+    if (title) title.appendChild(el);
+  }
+  var colors = { info: 'var(--text-3)', success: 'var(--accent)', error: '#c4463a' };
+  el.style.color = colors[type] || colors.info;
+  el.textContent = message;
+  if (type === 'success') {
+    setTimeout(function() { el.textContent = ''; }, 5000);
+  }
+}
+
 function handleScriptFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
   if (ext === 'json') {
     loadJsonFile(file);
-  } else if (ext === 'docx' || ext === 'doc') {
+    return;
+  }
+  const supported = ['docx', 'doc', 'txt', 'fountain', 'rtf', 'fdx', 'pdf'];
+  if (supported.indexOf(ext) === -1) {
+    showStatus('Unsupported file format: .' + ext, 'error');
+    return;
+  }
+  // Always try backend first, fall back to client-side parsing
+  uploadToBackend(file)
+    .then(function(data) {
+      console.log('Backend parsed ' + file.name + ': ' + data.scene_count + ' scenes');
+      showStatus('Parsed ' + data.scene_count + ' scenes. Analyzing with Claude...', 'info');
+      // Show basic parse results immediately
+      mapBreakdownToUI(backendToUI(data));
+      // Then trigger Claude analysis
+      return analyzeWithClaude();
+    })
+    .catch(function(backendErr) {
+      console.warn('Backend unavailable (' + backendErr.message + '), falling back to client-side parsing');
+      showStatus('Backend unavailable, using client-side parsing', 'info');
+      parseClientSide(file);
+    });
+}
+
+function uploadToBackend(file) {
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('title', file.name.replace(/\.[^.]+$/, ''));
+  var apiBase = window.location.origin;
+  return fetch(apiBase + '/api/script/upload', {
+    method: 'POST',
+    body: formData
+  }).then(function(resp) {
+    if (!resp.ok) {
+      return resp.json().then(function(err) {
+        throw new Error(err.error || 'Upload failed: HTTP ' + resp.status);
+      });
+    }
+    return resp.json();
+  });
+}
+
+function backendToUI(data) {
+  // Map backend /api/script/upload response → mapBreakdownToUI format
+  var scenes = (data.scenes || []).map(function(s) {
+    return {
+      scene_id: String(s.scene_number || ''),
+      slugline: s.slugline || '',
+      int_ext: s.int_ext || '',
+      day_night: s.day_night || '',
+      characters: s.characters || [],
+      vfx_categories: (s.vfx_triggers || []).map(function(t) { return t.category; }),
+      cost_risk_score: 1,
+      schedule_risk_score: 1,
+      vfx_shot_count_estimate: { min: 0, likely: 0, max: 0 },
+      scene_summary: '',
+      production_flags: {},
+      risk_reasons: [],
+      suggested_capture: [],
+      notes_for_producer: (s.vfx_triggers || []).map(function(t) {
+        return t.keyword + ': ' + t.context;
+      }).filter(function(n) { return n && n !== ': '; }),
+      word_count: s.word_count || 0
+    };
+  });
+  return {
+    project_summary: {
+      project_title: data.title || 'Untitled',
+      total_scenes: data.scene_count || scenes.length,
+      format: 'Backend Parse'
+    },
+    scenes: scenes,
+    hidden_cost_radar: [],
+    key_questions_for_team: {}
+  };
+}
+
+function analyzeWithClaude() {
+  var apiBase = window.location.origin;
+  return fetch(apiBase + '/api/script/analyze', { method: 'POST' })
+    .then(function(resp) {
+      if (!resp.ok) {
+        return resp.json().then(function(err) {
+          throw new Error(err.error || 'Analysis failed');
+        });
+      }
+      return resp.json();
+    })
+    .then(function(data) {
+      showStatus('Analysis complete. ' + (data.scenes || []).length + ' scenes with VFX breakdown.', 'success');
+      mapBreakdownToUI(data);
+    })
+    .catch(function(err) {
+      showStatus('Claude analysis failed: ' + err.message + '. Showing basic parse results.', 'error');
+    });
+}
+
+function parseClientSide(file) {
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'docx' || ext === 'doc') {
     parseDocxFile(file);
-  } else if (ext === 'txt' || ext === 'fountain' || ext === 'rtf') {
-    parseTextFile(file);
   } else if (ext === 'fdx') {
     parseFdxFile(file);
   } else if (ext === 'pdf') {
-    alert('PDF upload requires the backend server. Please use Word Doc (.docx), Text (.txt), Final Draft (.fdx), or Fountain (.fountain) format.');
+    showStatus('PDF upload requires the backend server. Start with: uvicorn sba.app:app --reload', 'error');
   } else {
-    alert('Unsupported file format: .' + ext);
+    // txt, fountain, rtf
+    parseTextFile(file);
   }
 }
 
@@ -1887,7 +2002,7 @@ function parseDocxFile(file) {
         mapBreakdownToUI(data);
       })
       .catch(function(err) {
-        alert('Failed to parse Word document: ' + err.message);
+        showStatus('Failed to parse Word document: ' + err.message, 'error');
       });
   };
   reader.readAsArrayBuffer(file);
@@ -1929,7 +2044,7 @@ function parseFdxFile(file) {
       const data = textToBreakdown(text, file.name);
       mapBreakdownToUI(data);
     } catch (err) {
-      alert('Failed to parse Final Draft file: ' + err.message);
+      showStatus('Failed to parse Final Draft file: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
@@ -1953,25 +2068,28 @@ function textToBreakdown(text, filename) {
       var isInt = /^\s*INT/i.test(line);
       var isDay = /DAY/i.test(line);
       currentScene = {
-        id: String(sceneNum),
-        slug: line,
-        ie: isInt ? 'INT' : 'EXT',
-        dn: isDay ? 'DAY' : 'NIGHT',
-        pages: 1,
-        cats: [],
-        cr: 0,
-        sr: 0,
-        shots: {l: 0, m: 0, h: 0},
-        chars: [],
-        flags: [],
-        notes: '',
-        body: ''
+        scene_id: String(sceneNum),
+        slugline: line,
+        int_ext: isInt ? 'INT' : 'EXT',
+        day_night: isDay ? 'DAY' : 'NIGHT',
+        characters: [],
+        vfx_categories: [],
+        cost_risk_score: 1,
+        schedule_risk_score: 1,
+        vfx_shot_count_estimate: { min: 0, likely: 0, max: 0 },
+        scene_summary: '',
+        production_flags: {},
+        risk_reasons: [],
+        suggested_capture: [],
+        notes_for_producer: '',
+        _body: ''
       };
     } else if (currentScene) {
-      currentScene.body += line + '\n';
+      currentScene._body += line + '\n';
+      // Detect CHARACTER names (all-caps lines, standard screenplay format)
       if (/^[A-Z][A-Z\s]+$/.test(line) && line.length > 1 && line.length < 40) {
-        if (currentScene.chars.indexOf(line) === -1) {
-          currentScene.chars.push(line);
+        if (currentScene.characters.indexOf(line) === -1) {
+          currentScene.characters.push(line);
         }
       }
     }
@@ -1980,11 +2098,13 @@ function textToBreakdown(text, filename) {
 
   return {
     project_summary: {
-      title: filename.replace(/\.[^.]+$/, ''),
+      project_title: filename.replace(/\.[^.]+$/, ''),
       total_scenes: scenes.length,
       format: filename.split('.').pop().toUpperCase() + ' Upload'
     },
-    scenes: scenes
+    scenes: scenes,
+    hidden_cost_radar: [],
+    key_questions_for_team: {}
   };
 }
 
@@ -1994,12 +2114,12 @@ function loadJsonFile(file) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.scenes && !data.project_summary) {
-        alert('Invalid JSON: expected a BreakdownOutput with "scenes" and "project_summary" fields.');
+        showStatus('Invalid JSON format', 'error');
         return;
       }
       mapBreakdownToUI(data);
     } catch (err) {
-      alert('Failed to parse JSON: ' + err.message);
+      showStatus('Failed to parse JSON: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
