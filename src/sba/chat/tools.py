@@ -184,11 +184,26 @@ def _read_budget(account_code: str) -> dict[str, Any]:
 
 
 def _get_scene(scene_number: str) -> dict[str, Any]:
-    """Get scene data from SBA. Stub — wire to loaded SBA data."""
+    """Get scene data from the currently loaded script."""
+    from sba.app import _current_script, _current_analysis
+
+    # Prefer analysis data (rich Claude output) over basic parse
+    if _current_analysis is not None:
+        for scene in _current_analysis.scenes:
+            if scene.scene_id == scene_number:
+                return scene.model_dump(mode="json")
+        return {"error": f"Scene {scene_number} not found in analysis ({len(_current_analysis.scenes)} scenes loaded)"}
+
+    if _current_script is not None:
+        for scene in _current_script.get("scenes", []):
+            if str(scene.get("scene_number")) == scene_number:
+                return scene
+        return {"error": f"Scene {scene_number} not found in parsed script ({len(_current_script.get('scenes', []))} scenes loaded)"}
+
     return {
         "scene_number": scene_number,
         "status": "not_loaded",
-        "message": "SBA data not loaded. Run the breakdown pipeline first.",
+        "message": "No script loaded. Upload a screenplay first.",
     }
 
 
