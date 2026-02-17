@@ -185,7 +185,7 @@ def _read_budget(account_code: str) -> dict[str, Any]:
 
 def _get_scene(scene_number: str) -> dict[str, Any]:
     """Get scene data from the currently loaded script."""
-    from sba.app import _current_script, _current_analysis
+    from sba.app import _current_analysis, _current_script
 
     # Prefer analysis data (rich Claude output) over basic parse
     if _current_analysis is not None:
