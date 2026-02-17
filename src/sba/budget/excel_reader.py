@@ -82,7 +82,9 @@ def read_account(account_code: str) -> dict[str, Any]:
     for row in range(1, ws.max_row + 1):
         cell_val = ws.cell(row=row, column=1).value
         if cell_val and str(cell_val).strip() == str(account_code).strip():
-            category = ws.cell(row=row, column=2).value or ACCOUNT_NAMES.get(account_code, "Unknown")
+            category = ws.cell(row=row, column=2).value or ACCOUNT_NAMES.get(
+                account_code, "Unknown"
+            )
             budget = ws.cell(row=row, column=3).value or 0
             actual = ws.cell(row=row, column=4).value or 0
             variance = ws.cell(row=row, column=5).value
@@ -153,14 +155,16 @@ def get_budget_summary() -> dict[str, Any]:
             budget = ws.cell(row=row, column=3).value or 0
             actual = ws.cell(row=row, column=4).value or 0
             if actual > budget and budget > 0:
-                over_budget.append({
-                    "account": str(code).strip(),
-                    "category": ACCOUNT_NAMES.get(str(code).strip(), ""),
-                    "budget": budget,
-                    "actual": actual,
-                    "overage": actual - budget,
-                    "overage_pct": round((actual - budget) / budget * 100, 1),
-                })
+                over_budget.append(
+                    {
+                        "account": str(code).strip(),
+                        "category": ACCOUNT_NAMES.get(str(code).strip(), ""),
+                        "budget": budget,
+                        "actual": actual,
+                        "overage": actual - budget,
+                        "overage_pct": round((actual - budget) / budget * 100, 1),
+                    }
+                )
 
     return {
         "total_budget": grand_budget,
@@ -193,16 +197,18 @@ def get_vfx_detail() -> list[dict[str, Any]]:
         if desc and "TOTAL" in str(desc).upper():
             break
 
-        scenes.append({
-            "scene": str(scene_num).strip(),
-            "description": desc,
-            "shots": ws.cell(row=row, column=3).value or 0,
-            "env_extension": ws.cell(row=row, column=4).value or 0,
-            "creature_fx": ws.cell(row=row, column=5).value or 0,
-            "wire_removal": ws.cell(row=row, column=6).value or 0,
-            "particle_fx": ws.cell(row=row, column=7).value or 0,
-            "cg_composite": ws.cell(row=row, column=8).value or 0,
-            "total": ws.cell(row=row, column=9).value or 0,
-        })
+        scenes.append(
+            {
+                "scene": str(scene_num).strip(),
+                "description": desc,
+                "shots": ws.cell(row=row, column=3).value or 0,
+                "env_extension": ws.cell(row=row, column=4).value or 0,
+                "creature_fx": ws.cell(row=row, column=5).value or 0,
+                "wire_removal": ws.cell(row=row, column=6).value or 0,
+                "particle_fx": ws.cell(row=row, column=7).value or 0,
+                "cg_composite": ws.cell(row=row, column=8).value or 0,
+                "total": ws.cell(row=row, column=9).value or 0,
+            }
+        )
 
     return scenes

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 CORPUS_DIR = PROJECT_ROOT / "corpus"

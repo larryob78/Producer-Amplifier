@@ -79,17 +79,30 @@ def _log_audit(
     sheet_name = "Audit Log"
     if sheet_name not in wb.sheetnames:
         ws = wb.create_sheet(sheet_name)
-        ws.append(["Timestamp", "Account", "Category", "Field", "Old Value", "New Value", "Reason", "User"])
+        ws.append(
+            [
+                "Timestamp",
+                "Account",
+                "Category",
+                "Field",
+                "Old Value",
+                "New Value",
+                "Reason",
+                "User",
+            ]
+        )
     else:
         ws = wb[sheet_name]
 
-    ws.append([
-        datetime.datetime.now().isoformat(),
-        account_code,
-        ACCOUNT_NAMES.get(account_code, ""),
-        field,
-        old_value,
-        new_value,
-        reason,
-        "Producer Copilot",
-    ])
+    ws.append(
+        [
+            datetime.datetime.now().isoformat(),
+            account_code,
+            ACCOUNT_NAMES.get(account_code, ""),
+            field,
+            old_value,
+            new_value,
+            reason,
+            "Producer Copilot",
+        ]
+    )

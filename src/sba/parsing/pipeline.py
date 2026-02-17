@@ -16,7 +16,16 @@ from sba.parsing.text_extractor import extract_text_from_file
 from sba.parsing.vfx_scanner import scan_for_vfx_triggers
 
 # Supported file extensions
-SUPPORTED_FORMATS = {".pdf", ".txt", ".text", ".docx", ".doc", ".fdx", ".rtf", ".fountain"}
+SUPPORTED_FORMATS = {
+    ".pdf",
+    ".txt",
+    ".text",
+    ".docx",
+    ".doc",
+    ".fdx",
+    ".rtf",
+    ".fountain",
+}
 
 
 def parse_script_text(text: str, title: str = "") -> ParsedScript:
@@ -57,10 +66,12 @@ def extract_text_from_any(file_path: Path) -> str:
 
     elif suffix == ".docx":
         from sba.parsing.docx_extractor import extract_text_from_docx
+
         return extract_text_from_docx(file_path)
 
     elif suffix == ".fdx":
         from sba.parsing.fdx_extractor import extract_text_from_fdx
+
         return extract_text_from_fdx(file_path)
 
     elif suffix in {".txt", ".text", ".fountain", ".rtf"}:

@@ -17,8 +17,7 @@ def extract_text_from_docx(docx_path: str | Path) -> str:
     """
     if Document is None:
         raise ImportError(
-            "python-docx is required for Word files. "
-            "Install it with: pip install python-docx"
+            "python-docx is required for Word files. " "Install it with: pip install python-docx"
         )
 
     docx_path = Path(docx_path)

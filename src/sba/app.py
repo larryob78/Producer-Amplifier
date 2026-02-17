@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import io
-import json
 import tempfile
-from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from sba.chat.router import router as chat_router
-from sba.config import PROJECT_ROOT, MASTER_BUDGET_PATH
+from sba.config import MASTER_BUDGET_PATH, PROJECT_ROOT
 from sba.parsing.pipeline import SUPPORTED_FORMATS
 
 app = FastAPI(
@@ -43,6 +41,7 @@ async def startup():
     """Load budget on startup if path is configured."""
     if MASTER_BUDGET_PATH:
         from sba.budget.excel_reader import load_budget
+
         try:
             load_budget(MASTER_BUDGET_PATH)
             print(f"\u2713 Budget loaded from {MASTER_BUDGET_PATH}")
@@ -71,6 +70,7 @@ async def serve_integration_js():
 # ================================================================
 # SCRIPT UPLOAD — accepts any format
 # ================================================================
+
 
 @app.post("/api/script/upload")
 async def upload_script(
@@ -180,10 +180,12 @@ async def supported_formats():
 # HEALTH & BUDGET
 # ================================================================
 
+
 @app.get("/api/health")
 async def health():
     """Health check endpoint."""
     from sba.budget.excel_reader import _workbook
+
     return {
         "status": "ok",
         "budget_loaded": _workbook is not None,
@@ -196,6 +198,7 @@ async def health():
 async def budget_summary():
     """Get the current budget summary for the budget bar."""
     from sba.budget.excel_reader import get_budget_summary
+
     try:
         return get_budget_summary()
     except RuntimeError as e:
@@ -206,6 +209,7 @@ async def budget_summary():
 async def budget_vfx():
     """Get VFX detail by scene."""
     from sba.budget.excel_reader import get_vfx_detail
+
     try:
         return get_vfx_detail()
     except RuntimeError as e:
@@ -216,6 +220,7 @@ async def budget_vfx():
 async def budget_account(code: int):
     """Read a specific budget account by Hollywood code (1100-9000)."""
     from sba.budget.excel_reader import read_account
+
     try:
         return read_account(code)
     except Exception as e:
@@ -231,6 +236,7 @@ async def budget_update(
 ):
     """Update a budget account value (writes to Excel with audit trail)."""
     from sba.budget.excel_writer import update_account
+
     try:
         result = update_account(account_code, field, value, reason)
         return result
@@ -242,15 +248,18 @@ async def budget_update(
 # VOICE
 # ================================================================
 
+
 @app.post("/api/voice/transcribe")
 async def voice_transcribe(audio: UploadFile = File(...)):
     """Transcribe voice audio to text via Whisper STT."""
     from sba.config import OPENAI_API_KEY
+
     if not OPENAI_API_KEY:
         return {"error": "OPENAI_API_KEY not set. Required for Whisper STT."}
 
     try:
         from sba.voice.stt import transcribe_audio
+
         audio_bytes = await audio.read()
         text = await transcribe_audio(audio_bytes)
         return {"text": text}
@@ -264,11 +273,13 @@ async def voice_transcribe(audio: UploadFile = File(...)):
 async def voice_speak(text: str = Form(...)):
     """Convert text to speech via ElevenLabs TTS. Returns audio stream."""
     from sba.config import ELEVENLABS_API_KEY
+
     if not ELEVENLABS_API_KEY:
         return {"error": "ELEVENLABS_API_KEY not set. Required for TTS."}
 
     try:
         from sba.voice.tts import synthesize_speech
+
         audio_bytes = await synthesize_speech(text)
         return StreamingResponse(
             io.BytesIO(audio_bytes),

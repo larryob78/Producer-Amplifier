@@ -349,7 +349,11 @@ def analyze_script_staged(
     )
 
     # Parse synthesis result
-    from sba.output.validate import _strip_markdown_fences, _try_parse_json, _try_repair_json
+    from sba.output.validate import (
+        _strip_markdown_fences,
+        _try_parse_json,
+        _try_repair_json,
+    )
 
     stripped = _strip_markdown_fences(synthesis_raw)
     synthesis_data, err = _try_parse_json(stripped)

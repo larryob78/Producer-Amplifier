@@ -97,11 +97,13 @@ async def send_message(req: ChatRequest) -> ChatResponse:
         for block in response.content:
             if block.type == "tool_use":
                 result = execute_tool(block.name, block.input)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": json.dumps(result),
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps(result),
+                    }
+                )
 
         history.append({"role": "assistant", "content": response.content})
         history.append({"role": "user", "content": tool_results})
@@ -162,12 +164,14 @@ async def chat_websocket(ws: WebSocket):
             system = build_system_prompt()
 
             # Send route info
-            await ws.send_json({
-                "type": "route",
-                "model": decision.model,
-                "tier": decision.tier.value,
-                "reason": decision.reason,
-            })
+            await ws.send_json(
+                {
+                    "type": "route",
+                    "model": decision.model,
+                    "tier": decision.tier.value,
+                    "reason": decision.reason,
+                }
+            )
 
             # Stream the response
             kwargs: dict[str, Any] = {
@@ -192,20 +196,22 @@ async def chat_websocket(ws: WebSocket):
                         elif event.type == "content_block_delta":
                             delta = event.delta
                             if hasattr(delta, "thinking"):
-                                await ws.send_json({
-                                    "type": "thinking_delta",
-                                    "text": delta.thinking,
-                                })
+                                await ws.send_json(
+                                    {
+                                        "type": "thinking_delta",
+                                        "text": delta.thinking,
+                                    }
+                                )
                             elif hasattr(delta, "text"):
-                                await ws.send_json({
-                                    "type": "text_delta",
-                                    "text": delta.text,
-                                })
+                                await ws.send_json(
+                                    {
+                                        "type": "text_delta",
+                                        "text": delta.text,
+                                    }
+                                )
 
             full_response = stream.get_final_message()
-            reply = "".join(
-                b.text for b in full_response.content if b.type == "text"
-            )
+            reply = "".join(b.text for b in full_response.content if b.type == "text")
             _conversations[conv_id].append({"role": "assistant", "content": reply})
 
             await ws.send_json({"type": "done"})
@@ -217,7 +223,8 @@ async def chat_websocket(ws: WebSocket):
 def _extract_data_card(text: str) -> dict[str, Any] | None:
     """Extract a JSON data card if the model included one."""
     import re
-    match = re.search(r'```data-card\n(.+?)\n```', text, re.DOTALL)
+
+    match = re.search(r"```data-card\n(.+?)\n```", text, re.DOTALL)
     if match:
         try:
             return json.loads(match.group(1))

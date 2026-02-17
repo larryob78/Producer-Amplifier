@@ -49,7 +49,12 @@ def _make_breakdown() -> BreakdownOutput:
                 "day_night": "night",
                 "page_count_eighths": 8,
                 "characters": ["HERO", "VILLAIN", "SIDEKICK", "EXTRA1"],
-                "vfx_categories": ["cg_creature", "fx_destruction", "set_extension", "comp"],
+                "vfx_categories": [
+                    "cg_creature",
+                    "fx_destruction",
+                    "set_extension",
+                    "comp",
+                ],
                 "vfx_triggers": ["monster", "building collapse"],
                 "production_flags": {"creatures": True, "destruction": True},
                 "vfx_shot_count_estimate": {"min": 15, "likely": 25, "max": 40},

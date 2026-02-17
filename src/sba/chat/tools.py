@@ -173,6 +173,7 @@ def execute_tool(name: str, inputs: dict[str, Any]) -> dict[str, Any]:
 def _read_budget(account_code: str) -> dict[str, Any]:
     """Read budget line from Excel. Stub — wire to budget/excel_reader.py."""
     from sba.budget.excel_reader import read_account
+
     try:
         return read_account(account_code)
     except Exception:
@@ -192,13 +193,17 @@ def _get_scene(scene_number: str) -> dict[str, Any]:
         for scene in _current_analysis.scenes:
             if scene.scene_id == scene_number:
                 return scene.model_dump(mode="json")
-        return {"error": f"Scene {scene_number} not found in analysis ({len(_current_analysis.scenes)} scenes loaded)"}
+        return {
+            "error": f"Scene {scene_number} not found in analysis ({len(_current_analysis.scenes)} scenes loaded)"
+        }
 
     if _current_script is not None:
         for scene in _current_script.get("scenes", []):
             if str(scene.get("scene_number")) == scene_number:
                 return scene
-        return {"error": f"Scene {scene_number} not found in parsed script ({len(_current_script.get('scenes', []))} scenes loaded)"}
+        return {
+            "error": f"Scene {scene_number} not found in parsed script ({len(_current_script.get('scenes', []))} scenes loaded)"
+        }
 
     return {
         "scene_number": scene_number,
@@ -282,38 +287,48 @@ def _check_schedule_conflict(scene_a: str, scene_b: str) -> dict[str, Any]:
     chars_b = set(sb.get("characters") or [])
     shared = chars_a & chars_b
     if shared:
-        conflicts.append({
-            "type": "shared_cast",
-            "severity": "high",
-            "detail": f"Shared characters: {', '.join(sorted(shared))}. Check turnaround if scheduled same day.",
-        })
+        conflicts.append(
+            {
+                "type": "shared_cast",
+                "severity": "high",
+                "detail": f"Shared characters: {', '.join(sorted(shared))}. Check turnaround if scheduled same day.",
+            }
+        )
 
     # Day/night mismatch = lighting turnaround
     dn_a = (sa.get("day_night") or "").lower()
     dn_b = (sb.get("day_night") or "").lower()
     if dn_a and dn_b and dn_a != dn_b:
-        conflicts.append({
-            "type": "day_night_change",
-            "severity": "medium",
-            "detail": f"Scene {scene_a} is {dn_a.upper()}, scene {scene_b} is {dn_b.upper()}. Lighting setup change required.",
-        })
+        conflicts.append(
+            {
+                "type": "day_night_change",
+                "severity": "medium",
+                "detail": f"Scene {scene_a} is {dn_a.upper()}, scene {scene_b} is {dn_b.upper()}. Lighting setup change required.",
+            }
+        )
 
     # INT/EXT mismatch = potential company move
     ie_a = (sa.get("int_ext") or "").lower()
     ie_b = (sb.get("int_ext") or "").lower()
     if ie_a and ie_b and ie_a != ie_b:
-        conflicts.append({
-            "type": "int_ext_change",
-            "severity": "low",
-            "detail": f"Scene {scene_a} is {ie_a.upper()}, scene {scene_b} is {ie_b.upper()}. May need company move.",
-        })
+        conflicts.append(
+            {
+                "type": "int_ext_change",
+                "severity": "low",
+                "detail": f"Scene {scene_a} is {ie_a.upper()}, scene {scene_b} is {ie_b.upper()}. May need company move.",
+            }
+        )
 
     return {
         "scene_a": scene_a,
         "scene_b": scene_b,
         "conflict_count": len(conflicts),
         "conflicts": conflicts,
-        "note": "No conflicts detected." if not conflicts else f"{len(conflicts)} potential conflict(s) found.",
+        "note": (
+            "No conflicts detected."
+            if not conflicts
+            else f"{len(conflicts)} potential conflict(s) found."
+        ),
     }
 
 
@@ -375,11 +390,10 @@ def _search_hidden_costs(scenario: str) -> dict[str, Any]:
     }
 
 
-def _update_budget(
-    account_code: str, field: str, value: Any, reason: str
-) -> dict[str, Any]:
+def _update_budget(account_code: str, field: str, value: Any, reason: str) -> dict[str, Any]:
     """Update budget in Excel. Stub — wire to budget/excel_writer.py."""
     from sba.budget.excel_writer import update_account
+
     try:
         return update_account(account_code, field, value, reason)
     except Exception:

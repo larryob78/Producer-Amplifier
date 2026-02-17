@@ -2,12 +2,7 @@
 
 import pytest
 
-from sba.output.schema import (
-    BreakdownOutput,
-    Scene,
-    VfxCategory,
-    VfxShotCountEstimate,
-)
+from sba.output.schema import BreakdownOutput, Scene, VfxCategory, VfxShotCountEstimate
 
 
 def test_minimal_valid_scene():

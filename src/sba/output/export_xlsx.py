@@ -59,7 +59,10 @@ def export_xlsx(breakdown: BreakdownOutput, output_path: Path) -> Path:
     flag_rows = [
         ("VFX Heaviness", gf.overall_vfx_heaviness),
         ("Virtual Production Fit", gf.likely_virtual_production_fit),
-        ("Top Risk Themes", ", ".join(gf.top_risk_themes) if gf.top_risk_themes else "—"),
+        (
+            "Top Risk Themes",
+            ", ".join(gf.top_risk_themes) if gf.top_risk_themes else "—",
+        ),
     ]
     for i, (label, val) in enumerate(flag_rows, 11):
         ws_summary.cell(row=i, column=1, value=label).font = label_font
@@ -159,7 +162,13 @@ def export_xlsx(breakdown: BreakdownOutput, output_path: Path) -> Path:
 
     # --- Hidden Costs sheet ---
     ws_costs = wb.create_sheet("Hidden Costs")
-    cost_headers = ["Severity", "Flag", "Affected Scenes", "Why It Matters", "Mitigations"]
+    cost_headers = [
+        "Severity",
+        "Flag",
+        "Affected Scenes",
+        "Why It Matters",
+        "Mitigations",
+    ]
     for col, h in enumerate(cost_headers, 1):
         cell = ws_costs.cell(row=1, column=col, value=h)
         cell.font = header_text
