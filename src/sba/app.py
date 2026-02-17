@@ -3,21 +3,23 @@
 from __future__ import annotations
 
 import io
+import json
 import tempfile
+from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
 from sba.chat.router import router as chat_router
-from sba.config import MASTER_BUDGET_PATH, PROJECT_ROOT
+from sba.config import PROJECT_ROOT, MASTER_BUDGET_PATH
 from sba.parsing.pipeline import SUPPORTED_FORMATS
 
 app = FastAPI(
     title="Napkin Producer Amplifier",
     description="AI-powered production intelligence for film producers",
-    version="0.4.0",
+    version="0.5.0",
 )
 
 # CORS — allow the NPA UI to talk to the API
@@ -34,8 +36,6 @@ app.include_router(chat_router)
 
 # In-memory store for the currently loaded script
 _current_script = None
-_current_analysis = None
-_current_raw_text = None
 
 
 @app.on_event("startup")
@@ -61,11 +61,11 @@ async def root():
 
 @app.get("/npa-integration.js")
 async def serve_integration_js():
-    """Serve the NPA integration JavaScript."""
+    """Serve the NPA integration layer (chat, budget, voice injection)."""
     js_path = PROJECT_ROOT / "npa-integration.js"
     if js_path.exists():
         return FileResponse(js_path, media_type="application/javascript")
-    return JSONResponse(status_code=404, content={"error": "npa-integration.js not found"})
+    return JSONResponse({"error": "npa-integration.js not found"}, status_code=404)
 
 
 # ================================================================
@@ -139,8 +139,6 @@ async def upload_script(
             result["scenes"].append(s)
 
         _current_script = result
-        global _current_raw_text
-        _current_raw_text = parsed.raw_text
         return result
 
     except Exception as e:
@@ -158,38 +156,6 @@ async def get_current_script():
     if _current_script is None:
         return {"error": "No script loaded. Upload one via /api/script/upload"}
     return _current_script
-
-
-@app.post("/api/script/analyze")
-async def analyze_script_endpoint():
-    """Run Claude analysis on the currently loaded script.
-
-    Requires a script to be loaded via /api/script/upload first.
-    Returns the full BreakdownOutput JSON.
-    """
-    global _current_analysis
-
-    if _current_raw_text is None:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "No script loaded. Upload one via /api/script/upload first."},
-        )
-
-    from sba.llm.generator import analyze_script_staged
-
-    try:
-        title = _current_script.get("title", "Untitled") if _current_script else "Untitled"
-        result = analyze_script_staged(
-            text=_current_raw_text,
-            title=title,
-        )
-        _current_analysis = result
-        return result.model_dump(mode="json")
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-        )
 
 
 @app.get("/api/script/formats")
@@ -270,57 +236,6 @@ async def budget_update(
         return result
     except Exception as e:
         return {"error": str(e)}
-
-
-# ================================================================
-# EXPORT
-# ================================================================
-
-
-@app.get("/api/export/csv")
-async def export_csv():
-    """Export current analysis as CSV download."""
-    if _current_analysis is None:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "No analysis loaded. Run /api/script/analyze first."},
-        )
-
-    from sba.output.export_csv import export_scenes_csv_string
-
-    csv_text = export_scenes_csv_string(_current_analysis)
-    title = "breakdown"
-    if _current_script:
-        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
-
-    return StreamingResponse(
-        io.BytesIO(csv_text.encode("utf-8")),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{title}_breakdown.csv"'},
-    )
-
-
-@app.get("/api/export/html")
-async def export_html_endpoint():
-    """Export current analysis as standalone HTML production bible."""
-    if _current_analysis is None:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "No analysis loaded. Run /api/script/analyze first."},
-        )
-
-    from sba.output.export_html import _build_html
-
-    html = _build_html(_current_analysis)
-    title = "breakdown"
-    if _current_script:
-        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
-
-    return StreamingResponse(
-        io.BytesIO(html.encode("utf-8")),
-        media_type="text/html",
-        headers={"Content-Disposition": f'attachment; filename="{title}_bible.html"'},
-    )
 
 
 # ================================================================

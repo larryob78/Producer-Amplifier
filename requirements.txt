@@ -1,12 +1,28 @@
-# Pinned dependencies for reproducible installs
-# Generated from pip freeze — update by running:
-#   pip freeze | grep -E "^(anthropic|pdfplumber|pydantic==|chromadb|voyageai|rank-bm25|json.repair|click|python-dotenv)" > requirements.txt
-anthropic==0.79.0
-chromadb==1.5.0
-click==8.3.1
-json_repair==0.57.1
-pdfplumber==0.11.9
-pydantic==2.12.5
-python-dotenv==1.2.1
-rank-bm25==0.2.2
-voyageai==0.3.7
+# Napkin Producer Amplifier — Python Dependencies
+# Install: pip install -r requirements.txt
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# AI / LLM
+anthropic>=0.42.0
+
+# Voice
+openai>=1.12.0
+
+# Parsing — Screenplay Formats
+pdfplumber>=0.10.0
+python-docx>=1.1.0
+
+# Budget — Excel Read/Write
+openpyxl>=3.1.0
+
+# RAG — Embeddings
+voyageai>=0.3.0
+numpy>=1.24.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.5.0

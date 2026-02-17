@@ -3,2186 +3,694 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Napkin â Producer Amplifier</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Napkin Producer Amplifier — Script Breakdown</title>
 <style>
-/* ================================================================
-   PRODUCTION BIBLE â Design System v2
-   Warm dark palette Â· collapsible scenes Â· search Â· filters
-   ================================================================ */
+/* ── Reset & Base ─────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;--bg2:#f5f6f8;--bg3:#ebedf0;
+  --text:#1a1a2e;--text2:#555;--text3:#888;
+  --accent:#e63946;--accent2:#d62839;
+  --blue:#2563eb;--blue2:#1d4ed8;
+  --green:#16a34a;--green2:#15803d;
+  --border:#ddd;--border2:#ccc;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --r1:#5a9e6f;--r2:#8fb065;--r3:#c9a84c;--r4:#cf7a3a;--r5:#c4463a;
+  --radius:10px;
+  --chat-w:380px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg2);color:var(--text);line-height:1.5}
+a{color:var(--blue);text-decoration:none}
 
-:root {
-  --bg: #0f0e0d;
-  --surface: #171614;
-  --surface-2: #1e1d1a;
-  --surface-3: #262522;
-  --surface-raised: #2d2b27;
+/* ── Top Bar ──────────────────────────────────────────── */
+.topbar{background:#fff;border-bottom:1px solid var(--border);
+  padding:12px 24px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.topbar h1{font-size:18px;font-weight:700;color:var(--text)}
+.topbar h1 span{color:var(--accent);font-weight:800}
+.topbar .subtitle{font-size:12px;color:var(--text3);margin-left:-8px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
 
-  --rule: rgba(255,245,230,0.06);
-  --rule-strong: rgba(255,245,230,0.12);
-  --rule-accent: rgba(255,245,230,0.18);
+/* Budget Button */
+.budget-btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;
+  border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .2s;
+  box-shadow:0 2px 8px rgba(230,57,70,0.3)}
+.budget-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.budget-btn .live-dot{width:8px;height:8px;border-radius:50%;
+  background:#fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* Text â improved contrast */
-  --text-1: #e8e4de;
-  --text-2: #b0a99e;
-  --text-3: #948d82;
-  --text-4: #5e574d;
+/* Chat Toggle */
+.chat-toggle-btn{background:var(--blue);color:#fff;border:none;padding:8px 18px;
+  border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .2s;
+  box-shadow:0 2px 8px rgba(37,99,235,0.3)}
+.chat-toggle-btn:hover{background:var(--blue2);transform:translateY(-1px)}
 
-  /* Risk spectrum */
-  --r1: #5a9e6f; --r2: #8fb065; --r3: #c9a84c; --r4: #cf7a3a; --r5: #c4463a;
+/* ── Hero Upload Section ─────────────────────────────── */
+.hero{background:#fff;border-radius:var(--radius);
+  margin:24px auto;max-width:800px;padding:48px 40px;text-align:center;
+  box-shadow:var(--shadow);border:2px dashed var(--border2);
+  transition:border-color .3s,background .3s}
+.hero.drag-over{border-color:var(--accent);background:#fef2f2}
+.hero.has-results{padding:20px 24px;border:1px solid var(--border)}
+.hero h2{font-size:28px;font-weight:700;margin-bottom:8px}
+.hero h2 span{color:var(--accent)}
+.hero p{color:var(--text2);font-size:15px;margin-bottom:24px}
+.hero .formats{color:var(--text3);font-size:12px;margin-top:12px}
 
-  --accent: #c9a84c;
-  --accent-dim: rgba(201,168,76,0.10);
+.upload-btn{background:var(--accent);color:#fff;border:none;
+  padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(230,57,70,0.25)}
+.upload-btn:hover{background:var(--accent2);transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(230,57,70,0.35)}
 
-  --page-max: 920px;
-  --gutter: 48px;
+.upload-status{margin-top:16px;font-size:14px;color:var(--text2)}
+.upload-status.error{color:var(--r5)}
+.upload-status.success{color:var(--green)}
 
-  --serif: 'Source Serif 4', 'Georgia', serif;
-  --sans: 'Inter', -apple-system, sans-serif;
-  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+/* Loading spinner */
+.spinner{display:inline-block;width:20px;height:20px;
+  border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* ── Project Summary Bar ─────────────────────────────── */
+.summary-bar{background:#fff;border-radius:var(--radius);
+  margin:0 auto 20px;max-width:1200px;padding:16px 24px;
+  box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:24px;align-items:center}
+.summary-bar .stat{text-align:center}
+.summary-bar .stat .num{font-size:24px;font-weight:700;color:var(--accent)}
+.summary-bar .stat .label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.summary-bar .title-display{font-size:18px;font-weight:700;flex:1}
 
-/* ===== RESET ===== */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text-2);
-  line-height: 1.6;
-  min-height: 100vh;
-}
+/* ── Filters ─────────────────────────────────────────── */
+.filters{background:#fff;border-radius:var(--radius);
+  margin:0 auto 20px;max-width:1200px;padding:14px 20px;
+  box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filter-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-right:4px}
+.filter-chip{padding:5px 12px;border-radius:16px;font-size:12px;
+  border:1px solid var(--border);background:var(--bg);cursor:pointer;
+  transition:all .2s;color:var(--text2)}
+.filter-chip:hover{border-color:var(--accent);color:var(--accent)}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* ================================================================
-   STICKY NAV
-   ================================================================ */
-.nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 44px;
-  background: rgba(15,14,13,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--rule);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-.nav-inner {
-  width: 100%;
-  max-width: calc(var(--page-max) + var(--gutter)*2);
-  padding: 0 var(--gutter);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.nav-brand {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-4);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.nav-brand strong { color: var(--text-2); }
-.nav-links {
-  display: flex;
-  gap: 20px;
-  flex: 1;
-}
-.nav-links a {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-4);
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--text-2); }
-.nav-links a.active { color: var(--accent); }
+/* ── Scene Cards ─────────────────────────────────────── */
+.scenes-container{max-width:1200px;margin:0 auto;padding:0 16px 100px}
+.scene-card{background:#fff;border-radius:var(--radius);margin-bottom:14px;
+  box-shadow:var(--shadow);overflow:hidden;border-left:4px solid var(--border)}
+.scene-card[data-risk="1"]{border-left-color:var(--r1)}
+.scene-card[data-risk="2"]{border-left-color:var(--r2)}
+.scene-card[data-risk="3"]{border-left-color:var(--r3)}
+.scene-card[data-risk="4"]{border-left-color:var(--r4)}
+.scene-card[data-risk="5"]{border-left-color:var(--r5)}
 
-/* Search in nav */
-.nav-search {
-  position: relative;
-  margin-left: auto;
-}
-.nav-search input {
-  font-family: var(--mono);
-  font-size: 11px;
-  width: 180px;
-  padding: 4px 10px 4px 28px;
-  border-radius: 4px;
-  border: 1px solid var(--rule-strong);
-  background: var(--surface-2);
-  color: var(--text-2);
-  outline: none;
-  transition: border-color 0.2s, width 0.3s var(--ease);
-}
-.nav-search input:focus {
-  border-color: var(--accent);
-  width: 220px;
-}
-.nav-search input::placeholder { color: var(--text-4); }
-.nav-search-icon {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  color: var(--text-4);
-  pointer-events: none;
-}
-.search-count {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-  white-space: nowrap;
-  margin-left: 8px;
-  display: none;
-}
-.search-count.visible { display: inline; }
+.scene-header{padding:14px 20px;cursor:pointer;display:flex;align-items:center;
+  gap:12px;transition:background .2s}
+.scene-header:hover{background:var(--bg2)}
+.scene-num{font-weight:700;font-size:14px;color:var(--accent);min-width:36px}
+.scene-slug{font-weight:600;font-size:14px;flex:1}
+.scene-ie{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.scene-ie.INT{background:#e0e7ff;color:#3730a3}
+.scene-ie.EXT{background:#dcfce7;color:#166534}
+.scene-dn{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;
+  background:var(--bg3);color:var(--text2)}
+.scene-vfx-count{font-size:11px;padding:2px 10px;border-radius:10px;
+  background:#fef2f2;color:var(--accent);font-weight:600}
+.scene-risk{width:28px;height:28px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.risk-1{background:var(--r1)}.risk-2{background:var(--r2)}.risk-3{background:var(--r3)}
+.risk-4{background:var(--r4)}.risk-5{background:var(--r5)}
+.scene-chevron{font-size:18px;color:var(--text3);transition:transform .2s}
+.scene-card.open .scene-chevron{transform:rotate(90deg)}
 
-/* Jump-to-scene dropdown */
-.jump-dropdown {
-  position: relative;
-}
-.jump-btn {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid var(--rule-strong);
-  background: var(--surface-2);
-  color: var(--text-3);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.2s;
-}
-.jump-btn:hover { border-color: var(--accent); color: var(--text-2); }
-.jump-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  background: var(--surface);
-  border: 1px solid var(--rule-strong);
-  border-radius: 6px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  max-height: 400px;
-  overflow-y: auto;
-  width: 320px;
-  z-index: 200;
-}
-.jump-menu.open { display: block; }
-.jump-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-size: 12px;
-  color: var(--text-2);
-}
-.jump-item:hover { background: var(--surface-2); }
-.jump-item-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.jump-item-id {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-3);
-  min-width: 28px;
-}
-.jump-item-slug {
-  font-family: var(--mono);
-  font-size: 11px;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.scene-body{display:none;padding:0 20px 16px;border-top:1px solid var(--bg3)}
+.scene-card.open .scene-body{display:block}
 
-/* Hamburger for mobile */
-.nav-hamburger {
-  display: none;
-  cursor: pointer;
-  width: 20px;
-  height: 16px;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.nav-hamburger span {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: var(--text-3);
-  border-radius: 1px;
-  transition: transform 0.2s, opacity 0.2s;
-}
-.nav-mobile-menu {
-  display: none;
-  position: fixed;
-  top: 44px;
-  left: 0;
-  right: 0;
-  background: rgba(15,14,13,0.96);
-  border-bottom: 1px solid var(--rule);
-  padding: 16px var(--gutter);
-  z-index: 99;
-  flex-direction: column;
-  gap: 12px;
-}
-.nav-mobile-menu.open { display: flex; }
-.nav-mobile-menu a {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-3);
-  text-decoration: none;
-  padding: 4px 0;
-}
-.nav-mobile-menu a:hover { color: var(--text-1); }
+.scene-meta{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:13px;color:var(--text2)}
+.scene-meta strong{color:var(--text)}
 
-/* View toggle */
-.view-toggle {
-  display: flex;
-  gap: 2px;
-  background: var(--surface-2);
-  border: 1px solid var(--rule-strong);
-  border-radius: 4px;
-  padding: 2px;
-}
-.view-toggle button {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 3px 10px;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--text-4);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.view-toggle button.active {
-  background: var(--surface-raised);
-  color: var(--text-1);
-}
+.vfx-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.vfx-tag{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:500}
+.vfx-tag.sev-1{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.vfx-tag.sev-2{background:#fefce8;color:#854d0e;border:1px solid #fef08a}
+.vfx-tag.sev-3{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.vfx-tag.sev-4{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.vfx-tag.sev-5{background:#fef2f2;color:#7f1d1d;border:1px solid #fca5a5}
 
-/* Load JSON button */
-.load-json-btn {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid var(--accent);
-  background: var(--accent-dim);
-  color: var(--accent);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-.load-json-btn:hover { background: rgba(201,168,76,0.2); color: var(--text-1); }
+.scene-characters{margin:8px 0;display:flex;flex-wrap:wrap;gap:6px}
+.char-chip{font-size:11px;padding:3px 10px;border-radius:12px;
+  background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
 
-/* Drag-drop overlay */
-.drop-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(15,14,13,0.92);
-  z-index: 500;
-  align-items: center;
-  justify-content: center;
-}
-.drop-overlay.visible { display: flex; }
-.drop-overlay-inner {
-  text-align: center;
-  padding: 48px;
-  border: 2px dashed var(--accent);
-  border-radius: 12px;
-  color: var(--accent);
-}
-.drop-text {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-1);
-  margin-top: 16px;
-}
-.drop-hint {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-4);
-  margin-top: 8px;
-}
+.scene-context{font-size:13px;color:var(--text2);margin:8px 0;
+  padding:10px;background:var(--bg2);border-radius:6px;line-height:1.6}
 
-/* ================================================================
-   PAGE CONTAINER
-   ================================================================ */
-.page {
-  max-width: var(--page-max);
-  margin: 0 auto;
-  padding: 44px var(--gutter) 80px;
-}
+/* ── AI Chat Panel ───────────────────────────────────── */
+.chat-panel{position:fixed;right:0;top:0;bottom:0;width:var(--chat-w);
+  background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,0.1);
+  z-index:200;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .3s ease}
+.chat-panel.open{transform:translateX(0)}
 
-/* ================================================================
-   TITLE BLOCK
-   ================================================================ */
-.title-block {
-  text-align: center;
-  padding: 72px 0 48px;
-  border-bottom: 1px solid var(--rule);
-}
-.title-block h1 {
-  font-family: var(--serif);
-  font-size: 36px;
-  font-weight: 800;
-  color: var(--text-1);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  margin-bottom: 12px;
-}
-.title-block .subtitle {
-  font-family: var(--serif);
-  font-size: 16px;
-  font-weight: 400;
-  font-style: italic;
-  color: var(--text-3);
-  margin-bottom: 24px;
-}
-.title-meta {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-4);
-  letter-spacing: 0.03em;
-}
-.title-meta span { display: flex; align-items: center; gap: 6px; }
-.title-meta .dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--text-4);
-}
+.chat-header{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;background:var(--blue);color:#fff}
+.chat-header h3{font-size:15px;font-weight:600;flex:1}
+.chat-close{background:none;border:none;color:#fff;font-size:20px;
+  cursor:pointer;opacity:.8;transition:opacity .2s}
+.chat-close:hover{opacity:1}
 
-/* ================================================================
-   EXECUTIVE SUMMARY
-   ================================================================ */
-.exec-summary {
-  display: flex;
-  justify-content: space-between;
-  padding: 28px 0;
-  border-bottom: 1px solid var(--rule);
-}
-.exec-stat { text-align: center; flex: 1; }
-.exec-stat + .exec-stat { border-left: 1px solid var(--rule); }
-.exec-val {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text-1);
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-.exec-label {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-4);
-  margin-top: 6px;
-}
-.exec-note {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-  margin-top: 2px;
-}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;
+  flex-direction:column;gap:12px}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.chat-msg.assistant{background:var(--bg2);align-self:flex-start;
+  border-bottom-left-radius:4px}
+.chat-msg.user{background:var(--blue);color:#fff;align-self:flex-end;
+  border-bottom-right-radius:4px}
+.chat-msg .model-badge{font-size:10px;color:var(--text3);margin-bottom:4px;
+  text-transform:uppercase;letter-spacing:.5px}
 
-/* ================================================================
-   SECTION HEADERS
-   ================================================================ */
-.section { padding-top: 48px; }
-.section-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--rule);
-}
-.section-num {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-4);
-  min-width: 20px;
-}
-.section-title {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-1);
-  letter-spacing: -0.01em;
-}
+.chat-input-row{padding:12px 16px;border-top:1px solid var(--border);
+  display:flex;gap:8px}
+.chat-input-row input{flex:1;padding:10px 14px;border:1px solid var(--border);
+  border-radius:8px;font-size:13px;outline:none;transition:border-color .2s}
+.chat-input-row input:focus{border-color:var(--blue)}
+.chat-send{background:var(--blue);color:#fff;border:none;padding:10px 16px;
+  border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;transition:all .2s}
+.chat-send:hover{background:var(--blue2)}
 
-/* Section toolbar */
-.section-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
-.expand-all-btn {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.expand-all-btn:hover { border-color: var(--accent); color: var(--text-2); }
+/* ── Budget Panel ────────────────────────────────────── */
+.budget-panel{position:fixed;left:0;top:0;bottom:0;width:360px;
+  background:#fff;box-shadow:4px 0 24px rgba(0,0,0,0.1);
+  z-index:200;transform:translateX(-100%);transition:transform .3s ease;
+  display:flex;flex-direction:column}
+.budget-panel.open{transform:translateX(0)}
+.budget-header{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;background:var(--accent);color:#fff}
+.budget-header h3{font-size:15px;font-weight:600;flex:1}
+.budget-close{background:none;border:none;color:#fff;font-size:20px;
+  cursor:pointer;opacity:.8}
+.budget-body{flex:1;overflow-y:auto;padding:20px}
+.budget-stat{margin-bottom:20px}
+.budget-stat .blabel{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.budget-stat .bval{font-size:28px;font-weight:700;color:var(--text)}
+.budget-stat .bval.over{color:var(--r5)}
+.budget-stat .bval.under{color:var(--green)}
 
-/* Active filter indicator */
-.filter-indicator {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--accent);
-  padding: 6px 12px;
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  background: var(--accent-dim);
-  margin-bottom: 16px;
-}
-.filter-indicator.visible { display: flex; }
-.filter-clear {
-  cursor: pointer;
-  color: var(--text-3);
-  font-weight: 600;
-  transition: color 0.15s;
-}
-.filter-clear:hover { color: var(--text-1); }
+/* ── Hidden ──────────────────────────────────────────── */
+.hidden{display:none!important}
 
-/* ================================================================
-   RISK TIMELINE â with animations
-   ================================================================ */
-.risk-timeline { padding: 20px 0; margin-bottom: 8px; }
-.timeline-bars {
-  display: flex;
-  gap: 2px;
-  height: 80px;
-  align-items: flex-end;
-}
-.t-bar {
-  flex: 1;
-  border-radius: 2px 2px 0 0;
-  cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s, transform 0.15s;
-  opacity: 0.75;
-  position: relative;
-  transform-origin: bottom center;
-  animation: growUp 0.6s var(--ease) both;
-}
-.t-bar:hover { opacity: 1; filter: brightness(1.2); transform: scaleY(1.05); }
-.t-bar.flash { animation: barFlash 0.4s ease; }
-
-@keyframes growUp {
-  from { transform: scaleY(0); opacity: 0; }
-  to { transform: scaleY(1); opacity: 0.75; }
-}
-@keyframes barFlash {
-  0%,100% { filter: brightness(1); }
-  50% { filter: brightness(1.8); }
-}
-
-.t-bar-tip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--surface);
-  border: 1px solid var(--rule-strong);
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 11px;
-  white-space: nowrap;
-  z-index: 10;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  pointer-events: none;
-  color: var(--text-2);
-}
-.t-bar:hover .t-bar-tip { display: block; }
-.t-bar-tip strong { color: var(--text-1); }
-
-.timeline-labels { display: flex; gap: 2px; margin-top: 4px; }
-.t-label {
-  flex: 1;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-4);
-}
-.timeline-legend {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule);
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: var(--text-4);
-}
-.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
-.risk-scale-header {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-  margin-right: 8px;
-}
-
-/* ================================================================
-   SCENE BREAKDOWN SHEET â collapsible
-   ================================================================ */
-.scene-sheet {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  margin-bottom: 16px;
-  background: var(--surface);
-  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.3s, transform 0.4s var(--ease);
-  border-left: 3px solid var(--rule);
-}
-.scene-sheet:hover { border-color: var(--rule-strong); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-.scene-sheet.hidden { display: none; }
-.scene-sheet.dimmed { opacity: 0.3; pointer-events: none; }
-
-/* IntersectionObserver fade-in */
-.scene-sheet.animate-in {
-  opacity: 0;
-  transform: translateY(12px);
-}
-.scene-sheet.animate-in.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Scene header â clickable for collapse */
-.scene-head {
-  display: flex;
-  align-items: center;
-  padding: 14px 24px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--rule);
-  gap: 12px;
-  flex-wrap: wrap;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s;
-}
-.scene-head:hover { background: var(--surface-3); }
-.scene-number {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-1);
-  min-width: 36px;
-}
-.scene-slug {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-1);
-  letter-spacing: -0.01em;
-  flex: 1;
-}
-.scene-meta-pills {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.scene-head-shots {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-3);
-}
-.chevron {
-  width: 16px;
-  height: 16px;
-  color: var(--text-4);
-  transition: transform 0.25s var(--ease);
-  flex-shrink: 0;
-}
-.scene-sheet.collapsed .chevron { transform: rotate(-90deg); }
-.meta-pill {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 2px;
-  background: var(--surface-3);
-  color: var(--text-3);
-  border: 1px solid var(--rule);
-}
-.risk-badge {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 2px;
-  border: 1px solid;
-}
-
-/* Scene body â collapsible */
-.scene-content {
-  overflow: hidden;
-  max-height: 2000px;
-  transition: max-height 0.4s var(--ease), opacity 0.3s;
-  opacity: 1;
-}
-.scene-sheet.collapsed .scene-content {
-  max-height: 0;
-  opacity: 0;
-}
-
-.scene-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-}
-.scene-col { padding: 20px 24px; }
-.scene-col + .scene-col { border-left: 1px solid var(--rule); }
-
-.field { margin-bottom: 18px; }
-.field:last-child { margin-bottom: 0; }
-.field-label {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-4);
-  margin-bottom: 6px;
-}
-.field-text {
-  font-size: 13px;
-  color: var(--text-2);
-  line-height: 1.65;
-}
-
-/* Character tags â interactive */
-.char-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.char-tag {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-  background: var(--surface-3);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.char-tag:hover { border-color: var(--accent); color: var(--accent); }
-.char-tag.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-
-/* VFX category pills â interactive */
-.vfx-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.vfx-tag {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 2px;
-  border: 1px solid;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.vfx-tag:hover { filter: brightness(1.3); }
-.vfx-tag.active { filter: brightness(1.3); box-shadow: 0 0 6px rgba(201,168,76,0.3); }
-.vfx-dot { width: 5px; height: 5px; border-radius: 50%; }
-
-/* Shot estimate range bar */
-.shot-range { margin-top: 4px; }
-.shot-bar-bg {
-  width: 100%;
-  height: 6px;
-  background: var(--surface-3);
-  border-radius: 3px;
-  position: relative;
-}
-.shot-bar-fill {
-  position: absolute;
-  height: 100%;
-  border-radius: 3px;
-  opacity: 0.35;
-}
-.shot-bar-mid {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  top: -1px;
-  margin-left: -4px;
-  border-radius: 1px;
-  background: var(--accent);
-  transform: rotate(45deg);
-}
-.shot-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-}
-.shot-labels .likely { color: var(--accent); font-weight: 600; }
-
-/* Risk reasons list */
-.reason-list { list-style: none; }
-.reason-list li {
-  padding: 5px 0;
-  font-size: 12px;
-  color: var(--text-2);
-  display: flex;
-  gap: 8px;
-  line-height: 1.5;
-}
-.reason-list li + li { border-top: 1px solid var(--rule); }
-.reason-bullet {
-  width: 3px; height: 3px;
-  border-radius: 50%;
-  background: var(--text-4);
-  margin-top: 7px;
-  flex-shrink: 0;
-}
-
-/* Capture & notes callouts */
-.callout {
-  padding: 10px 14px;
-  border-radius: 2px;
-  font-size: 12px;
-  line-height: 1.6;
-  border-left: 2px solid;
-}
-.callout-capture {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--text-2);
-}
-.callout-notes {
-  background: rgba(201,168,76,0.04);
-  border-color: var(--r3);
-  color: var(--text-3);
-  font-style: italic;
-}
-
-/* Scene flags footer */
-.scene-flags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 12px 24px;
-  border-top: 1px solid var(--rule);
-  background: var(--surface);
-}
-.s-flag {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 2px;
-  color: var(--text-4);
-  background: transparent;
-  border: 1px solid transparent;
-}
-.s-flag.on {
-  color: var(--r4);
-  background: rgba(207,122,58,0.06);
-  border-color: rgba(207,122,58,0.12);
-}
-
-/* ================================================================
-   TABLE VIEW
-   ================================================================ */
-.table-view { display: none; overflow-x: auto; }
-.table-view.active { display: block; }
-.card-view.hidden { display: none; }
-
-.scene-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-.scene-table th {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-3);
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--rule-strong);
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
-  white-space: nowrap;
-}
-.scene-table th:hover { color: var(--text-1); }
-.scene-table th.sorted { color: var(--accent); }
-.scene-table th .sort-arrow {
-  display: inline-block;
-  margin-left: 4px;
-  font-size: 8px;
-  vertical-align: middle;
-}
-.scene-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--rule);
-  color: var(--text-2);
-  vertical-align: top;
-}
-.scene-table tr {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.scene-table tr:hover { background: var(--surface-2); }
-.scene-table .risk-cell {
-  font-family: var(--mono);
-  font-weight: 600;
-  text-align: center;
-}
-
-/* ================================================================
-   HIDDEN COST ITEMS
-   ================================================================ */
-.cost-item {
-  display: flex;
-  gap: 16px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--rule);
-  align-items: flex-start;
-}
-.cost-item:last-child { border-bottom: none; }
-.cost-sev-badge {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 700;
-  width: 36px; height: 36px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid;
-}
-.cost-content { flex: 1; min-width: 0; }
-.cost-title {
-  font-family: var(--serif);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-1);
-  margin-bottom: 4px;
-}
-.cost-desc {
-  font-size: 13px;
-  color: var(--text-2);
-  line-height: 1.6;
-}
-.cost-affected {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-  margin-top: 6px;
-}
-.severity-header {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-  margin-bottom: 16px;
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.severity-header span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* ================================================================
-   KEY QUESTIONS
-   ================================================================ */
-.q-group { margin-bottom: 28px; }
-.q-group-label {
-  font-family: var(--serif);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-3);
-  margin-bottom: 12px;
-  font-style: italic;
-}
-.q-item {
-  display: flex;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--rule);
-  align-items: flex-start;
-}
-.q-item:last-child { border-bottom: none; }
-.q-marker {
-  font-family: var(--serif);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-4);
-  min-width: 20px;
-  line-height: 1.4;
-}
-.q-text {
-  font-size: 13px;
-  color: var(--text-2);
-  line-height: 1.6;
-  flex: 1;
-}
-.q-priority {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 8px;
-  border-radius: 2px;
-  border: 1px solid;
-  flex-shrink: 0;
-}
-
-/* ================================================================
-   FOOTER
-   ================================================================ */
-.doc-footer {
-  margin-top: 48px;
-  padding-top: 24px;
-  border-top: 1px solid var(--rule);
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-4);
-}
-
-/* ================================================================
-   LOAD JSON BUTTON
-   ================================================================ */
-.load-json-btn {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--accent);
-  background: var(--accent-dim);
-  color: var(--accent);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-.load-json-btn:hover {
-  background: rgba(201,168,76,0.20);
-  color: var(--text-1);
-}
-
-/* ================================================================
-   DRAG-DROP OVERLAY
-   ================================================================ */
-.drop-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(15,14,13,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  align-items: center;
-  justify-content: center;
-}
-.drop-overlay.visible { display: flex; }
-.drop-overlay-inner {
-  text-align: center;
-  padding: 48px 64px;
-  border: 2px dashed var(--accent);
-  border-radius: 16px;
-  background: var(--surface);
-  color: var(--text-2);
-}
-.drop-overlay-inner svg {
-  color: var(--accent);
-  margin-bottom: 16px;
-}
-.drop-text {
-  font-family: var(--serif);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-1);
-  margin-bottom: 6px;
-}
-.drop-hint {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-4);
-}
-
-/* ================================================================
-   BACK TO TOP
-   ================================================================ */
-.back-to-top {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface-raised);
-  border: 1px solid var(--rule-strong);
-  color: var(--text-3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s, transform 0.3s, background 0.15s;
-  z-index: 50;
-}
-.back-to-top.visible { opacity: 1; transform: translateY(0); }
-.back-to-top:hover { background: var(--surface-3); color: var(--text-1); }
-
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-@media (max-width: 768px) {
-  :root { --gutter: 20px; }
-  .scene-body { grid-template-columns: 1fr; }
-  .scene-col + .scene-col { border-left: none; border-top: 1px solid var(--rule); }
-  .exec-summary { flex-wrap: wrap; }
-  .exec-stat { min-width: 45%; }
-  .exec-stat + .exec-stat { border-left: none; }
-  .title-block h1 { font-size: 26px; }
-  .title-meta { flex-wrap: wrap; justify-content: center; gap: 12px; }
-
-  .nav-links, .nav-search, .jump-dropdown, .view-toggle, .load-json-btn { display: none; }
-  .nav-hamburger { display: flex; }
-  .nav-mobile-menu a.active { color: var(--accent); }
-
-  .timeline-bars { overflow-x: auto; min-width: 0; }
-  .t-bar { min-width: 18px; }
-  .timeline-labels { overflow-x: auto; }
-  .t-label { min-width: 18px; }
-
-  .scene-table { font-size: 11px; }
-}
-
-/* ================================================================
-   PRINT
-   ================================================================ */
-@media print {
-  .nav, .back-to-top, .nav-mobile-menu, .drop-overlay { display: none !important; }
-  .page { padding-top: 0; }
-  body { background: #fff; color: #222; }
-  .scene-sheet {
-    break-inside: avoid;
-    border-color: #ddd;
-    border-left-width: 1px;
-  }
-  .scene-sheet.collapsed .scene-content { max-height: none; opacity: 1; }
-  .scene-head { background: #f5f5f0; }
-  .title-block h1 { color: #111; }
-  .field-text, .cost-desc, .q-text { color: #333; }
-  .t-bar-tip { display: none !important; }
-  .chevron { display: none; }
-  .filter-indicator, .section-toolbar { display: none !important; }
-  .search-count { display: none !important; }
-  .view-toggle { display: none !important; }
-  .table-view { display: none !important; }
-  .card-view.hidden { display: block !important; }
-  .scene-sheet.dimmed { opacity: 1; pointer-events: auto; }
-  .scene-sheet.hidden { display: block; }
+/* ── Responsive ──────────────────────────────────────── */
+@media(max-width:768px){
+  .hero{margin:12px;padding:32px 20px}
+  .hero h2{font-size:22px}
+  .chat-panel{width:100%}
+  .budget-panel{width:100%}
+  .scenes-container{padding:0 8px 100px}
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 
-<!-- ===== STICKY NAV ===== -->
-<nav class="nav">
-  <div class="nav-inner">
-    <div class="nav-brand"><strong>Napkin</strong> &nbsp;Producer Amplifier</div>
-    <div class="nav-links">
-      <a href="#summary" class="active">Summary</a>
-      <a href="#scenes">Scenes</a>
-      <a href="#costs">Hidden Costs</a>
-      <a href="#questions">Questions</a>
-    </div>
-    <div class="nav-search">
-      <svg class="nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search scenes..." />
-    </div>
-    <span class="search-count" id="searchCount"></span>
-    <div class="jump-dropdown">
-      <button class="jump-btn" id="jumpBtn">Jump to Scene â¾</button>
-      <div class="jump-menu" id="jumpMenu"></div>
-    </div>
-    <button class="load-json-btn" id="loadJsonBtn" onclick="document.getElementById('jsonFileInput').click()">Upload Script</button>
-    <input type="file" id="jsonFileInput" accept=".json,.docx,.doc,.txt,.pdf,.fdx,.fountain,.rtf" style="display:none" />
-    <div class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()">
-      <span></span><span></span><span></span>
-    </div>
-  </div>
-</nav>
-<!-- Drag-drop overlay -->
-<div class="drop-overlay" id="dropOverlay">
-  <div class="drop-overlay-inner">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <div class="drop-text">Drop script file here</div>
-    <div class="drop-hint">Word Doc, PDF, Final Draft, Text, or JSON</div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1><span>NPA</span> Napkin Producer Amplifier</h1>
+  <span class="subtitle">v0.4 — Production Intelligence</span>
+  <div class="topbar-right">
+    <button class="budget-btn" id="budgetToggle" onclick="toggleBudget()">
+      <span class="live-dot"></span> LIVE BUDGET
+    </button>
+    <button class="chat-toggle-btn" id="chatToggle" onclick="toggleChat()">
+      AI Assistant
+    </button>
   </div>
 </div>
-<div class="nav-mobile-menu" id="mobileMenu">
-  <a href="#summary" onclick="closeMobileMenu()">Summary</a>
-  <a href="#scenes" onclick="closeMobileMenu()">Scenes</a>
-  <a href="#costs" onclick="closeMobileMenu()">Hidden Costs</a>
-  <a href="#questions" onclick="closeMobileMenu()">Questions</a>
-  <a href="#" onclick="event.preventDefault();closeMobileMenu();document.getElementById('jsonFileInput').click()">Load JSON</a>
+
+<!-- HERO UPLOAD -->
+<div class="hero" id="heroUpload">
+  <h2>Upload Your <span>Script</span></h2>
+  <p>Drop any screenplay format and the AI will break it down into scenes, characters, VFX triggers, and risk scores.</p>
+  <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+    Upload Script
+  </button>
+  <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt,.fdx,.fountain,.rtf,.json,.csv" style="display:none">
+  <div class="formats">Supports: PDF, Word (.docx), Final Draft (.fdx), Fountain, TXT, RTF, JSON, CSV</div>
+  <div class="upload-status" id="uploadStatus"></div>
 </div>
 
-<!-- ===== PAGE ===== -->
-<div class="page">
-
-  <!-- TITLE BLOCK -->
-  <div class="title-block" id="summary">
-    <h1 id="projectTitle">Signal Lost</h1>
-    <div class="subtitle">VFX Breakdown &amp; Production Risk Assessment</div>
-    <div class="title-meta">
-      <span>2026-02-14</span>
-      <span><span class="dot"></span></span>
-      <span id="metaScenes">7 scenes</span>
-      <span><span class="dot"></span></span>
-      <span>~38 est. pages</span>
-      <span><span class="dot"></span></span>
-      <span>claude-opus-4.6</span>
-    </div>
-    <div id="exportButtons" style="margin-top:12px;display:none">
-      <button onclick="exportCSV()" style="font-family:var(--mono);font-size:10px;padding:4px 12px;border:1px solid var(--rule-strong);border-radius:4px;background:var(--surface-2);color:var(--text-3);cursor:pointer;margin:0 4px">Export CSV</button>
-      <button onclick="exportHTML()" style="font-family:var(--mono);font-size:10px;padding:4px 12px;border:1px solid var(--rule-strong);border-radius:4px;background:var(--surface-2);color:var(--text-3);cursor:pointer;margin:0 4px">Export HTML</button>
-    </div>
-  </div>
-
-  <!-- EXECUTIVE SUMMARY -->
-  <div class="exec-summary" id="execSummary"></div>
-
-  <!-- RISK TIMELINE -->
-  <div class="section" id="risk-timeline-section">
-    <div class="section-header">
-      <span class="section-num">I.</span>
-      <h2 class="section-title">Risk Timeline</h2>
-    </div>
-    <div class="risk-timeline">
-      <div class="timeline-bars" id="timelineBars"></div>
-      <div class="timeline-labels" id="timelineLabels"></div>
-      <div class="timeline-legend">
-        <span class="risk-scale-header">Risk Scale:</span>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r1)"></div>1 Minimal</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r2)"></div>2 Mild</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r3)"></div>3 Moderate</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r4)"></div>4 High</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--r5)"></div>5 Critical</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCENE BREAKDOWNS -->
-  <div class="section" id="scenes">
-    <div class="section-header">
-      <span class="section-num">II.</span>
-      <h2 class="section-title">Scene Breakdowns</h2>
-      <div class="section-toolbar">
-        <div class="view-toggle">
-          <button class="active" id="cardViewBtn" onclick="setView('card')">Cards</button>
-          <button id="tableViewBtn" onclick="setView('table')">Table</button>
-        </div>
-        <button class="expand-all-btn" id="expandAllBtn" onclick="toggleExpandAll()">Expand All</button>
-      </div>
-    </div>
-    <div class="filter-indicator" id="filterIndicator">
-      <span id="filterText"></span>
-      <span class="filter-clear" onclick="clearFilter()">â Clear</span>
-    </div>
-    <div class="card-view" id="cardView">
-      <div id="sceneSheets"></div>
-    </div>
-    <div class="table-view" id="tableView">
-      <table class="scene-table" id="sceneTable">
-        <thead>
-          <tr>
-            <th data-sort="id" onclick="sortTable('id')">ID <span class="sort-arrow"></span></th>
-            <th data-sort="slug" onclick="sortTable('slug')">Slugline <span class="sort-arrow"></span></th>
-            <th data-sort="cr" onclick="sortTable('cr')">Cost <span class="sort-arrow"></span></th>
-            <th data-sort="sr" onclick="sortTable('sr')">Sched <span class="sort-arrow"></span></th>
-            <th data-sort="shots" onclick="sortTable('shots')">Shots <span class="sort-arrow"></span></th>
-            <th>Categories</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- HIDDEN COSTS -->
-  <div class="section" id="costs">
-    <div class="section-header">
-      <span class="section-num">III.</span>
-      <h2 class="section-title">Hidden Cost Radar</h2>
-    </div>
-    <div class="severity-header">
-      <span><span class="legend-dot" style="background:var(--r5);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 5 Critical</span>
-      <span><span class="legend-dot" style="background:var(--r4);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 4 High</span>
-      <span><span class="legend-dot" style="background:var(--r3);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 3 Medium</span>
-      <span><span class="legend-dot" style="background:var(--r1);display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle"></span> 1 Low</span>
-    </div>
-    <div id="costItems"></div>
-  </div>
-
-  <!-- KEY QUESTIONS -->
-  <div class="section" id="questions">
-    <div class="section-header">
-      <span class="section-num">IV.</span>
-      <h2 class="section-title">Key Questions for the Team</h2>
-    </div>
-    <div id="questionItems"></div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="doc-footer">
-    Generated by Napkin Â· Producer Amplifier Â· claude-opus-4.6 Â· 2026-02-14
-  </div>
-
+<!-- SUMMARY BAR (hidden until results) -->
+<div class="summary-bar hidden" id="summaryBar">
+  <div class="title-display" id="projectTitle">Untitled</div>
+  <div class="stat"><div class="num" id="statScenes">0</div><div class="label">Scenes</div></div>
+  <div class="stat"><div class="num" id="statChars">0</div><div class="label">Characters</div></div>
+  <div class="stat"><div class="num" id="statPages">0</div><div class="label">Est. Pages</div></div>
+  <div class="stat"><div class="num" id="statVfx">0</div><div class="label">VFX Triggers</div></div>
+  <button class="upload-btn" style="padding:8px 20px;font-size:13px" onclick="document.getElementById('fileInput').click()">
+    Upload New Script
+  </button>
 </div>
 
-<!-- Back to top -->
-<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
-</button>
+<!-- FILTERS (hidden until results) -->
+<div class="filters hidden" id="filtersBar">
+  <span class="filter-label">Filter:</span>
+  <span class="filter-chip active" data-filter="all" onclick="filterScenes('all',this)">All Scenes</span>
+  <span class="filter-chip" data-filter="vfx" onclick="filterScenes('vfx',this)">Has VFX</span>
+  <span class="filter-chip" data-filter="high" onclick="filterScenes('high',this)">High Risk</span>
+  <span class="filter-chip" data-filter="INT" onclick="filterScenes('INT',this)">INT</span>
+  <span class="filter-chip" data-filter="EXT" onclick="filterScenes('EXT',this)">EXT</span>
+</div>
 
+<!-- SCENE CARDS -->
+<div class="scenes-container" id="scenesContainer"></div>
+
+<!-- AI CHAT PANEL -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <h3>AI Production Assistant</h3>
+    <button class="chat-close" onclick="toggleChat()">&#x2715;</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg assistant">
+      <div class="model-badge">NPA Assistant</div>
+      Hi! I'm your production AI. Upload a script and ask me anything about scenes, VFX complexity, budget implications, or scheduling.
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Ask about your script..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<!-- BUDGET PANEL -->
+<div class="budget-panel" id="budgetPanel">
+  <div class="budget-header">
+    <h3>Live Budget</h3>
+    <button class="budget-close" onclick="toggleBudget()">&#x2715;</button>
+  </div>
+  <div class="budget-body" id="budgetBody">
+    <div class="budget-stat">
+      <div class="blabel">Total Budget</div>
+      <div class="bval" id="budgetTotal">&mdash;</div>
+    </div>
+    <div class="budget-stat">
+      <div class="blabel">Actual Spend</div>
+      <div class="bval" id="budgetActual">&mdash;</div>
+    </div>
+    <div class="budget-stat">
+      <div class="blabel">Variance</div>
+      <div class="bval" id="budgetVariance">&mdash;</div>
+    </div>
+    <p style="font-size:13px;color:var(--text3);margin-top:24px">
+      Connect your master budget Excel to see live figures.
+    </p>
+  </div>
+</div>
+
+<!-- JAVASCRIPT -->
 <script>
-// ================================================================
-// DATA
-// ================================================================
-const RC = ['','var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)'];
-const RC_HEX = ['','#5a9e6f','#8fb065','#c9a84c','#cf7a3a','#c4463a'];
+/* ── Configuration ─────────────────────────────────── */
+var API_BASE = window.location.origin;
+var currentScenes = [];
+var currentData = null;
 
-const CC = {
-  digital_augmentation:'#7a9e8e', vehicles_mech:'#6a8eb0', weapons_combat:'#b07a7a',
-  destruction_damage:'#b06a6a', weather_atmosphere:'#8a7ab0', creatures_animals:'#6ab08a',
-  supernatural_magic:'#a07ab0', water_work:'#6a9ab0', aerial_height:'#6ab0a0',
-  crowd_extras:'#9a7ab0', fire_pyro:'#b09a6a', set_extension:'#9ab06a', stunts:'#b08a7a'
-};
-const CL = {
-  digital_augmentation:'Digital', vehicles_mech:'Vehicles', weapons_combat:'Weapons',
-  destruction_damage:'Destruction', weather_atmosphere:'Weather', creatures_animals:'Creatures',
-  supernatural_magic:'Supernatural', water_work:'Water', aerial_height:'Aerial',
-  crowd_extras:'Crowds', fire_pyro:'Fire / Pyro', set_extension:'Set Extension', stunts:'Stunts'
-};
-const FN = {
-  blue_green_screen:'Screen', water_work:'Water', aerial_drone:'Aerial',
-  fire_pyro:'Fire', crowd_bg:'Crowd', stunts:'Stunts', animals:'Animals',
-  children:'Children', night_exterior:'Night Ext', weather_dependent:'Weather', multi_unit:'Multi-Unit'
+/* ── VFX Category Map ──────────────────────────────── */
+var VFX_CATS = {
+  digital_augmentation:"Digital", vehicles_mech:"Vehicles", weapons_combat:"Weapons",
+  destruction_damage:"Destruction", weather_atmosphere:"Weather", creatures_animals:"Creatures",
+  supernatural_magic:"Supernatural", water_work:"Water", aerial_height:"Aerial",
+  crowd_extras:"Crowds", fire_pyro:"Fire / Pyro", set_extension:"Set Extension", stunts:"Stunts"
 };
 
-let S = [
-  {id:"1",slug:"INT. ABANDONED WAREHOUSE â NIGHT",ie:"INT",dn:"NIGHT",pg:"3 2/8",ch:["DETECTIVE REYES","OFFICER CHEN","SWAT TEAM"],cats:["destruction_damage","weapons_combat","fire_pyro"],cr:5,sr:4,shots:{min:14,l:22,max:32},sum:"SWAT team breaches a warehouse rigged with explosives. Massive fireball blows out the second floor. Reyes narrowly escapes through collapsing scaffolding.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Large-scale practical explosion with CG enhancement","Collapsing scaffolding rig (mechanical + CG extension)","Fire stunt coordination â 8+ performers","Confined space pyro safety protocols"],capture:"Pre-rig warehouse for controlled pyro charges. Shoot collapse practically with CG extension for upper floors. Multiple safety takes.",notes:"Hero explosion â sets visual tone for entire film. Budget for 2 full rehearsals + 3 takes."},
-  {id:"2",slug:"EXT. MOUNTAIN HIGHWAY â DAY",ie:"EXT",dn:"DAY",pg:"4 4/8",ch:["MAYA","DRIVER","HELICOPTER PILOT"],cats:["vehicles_mech","aerial_height","destruction_damage"],cr:5,sr:5,shots:{min:20,l:35,max:50},sum:"High-speed car chase along cliff-edge highway. Helicopter pursuit. Lead car clips barrier and tumbles off the edge â hero shot of the fall.",flags:{blue_green_screen:0,water_work:0,aerial_drone:1,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:1},reasons:["Precision stunt driving at speed","Helicopter aerial coordination","CG cliff extension and car tumble","Road closure permits + multi-unit logistics","Weather-dependent mountain shooting"],capture:"Practical driving stunts with stunt doubles. CG takeover for cliff fall. Drone + helicopter for aerials. 2 camera cars.",notes:"Most complex action sequence. Pre-vis every shot. Lock road permits 8 weeks out. Stunt coordinator needs 3 days rehearsal."},
-  {id:"3",slug:"INT. UNDERWATER RESEARCH LAB â NIGHT",ie:"INT",dn:"NIGHT",pg:"2 6/8",ch:["DR. VASQUEZ","TECH WILSON","LAB CREW"],cats:["water_work","digital_augmentation","destruction_damage"],cr:4,sr:4,shots:{min:8,l:14,max:20},sum:"Pressure breach floods the lab. Water pours through cracking observation windows. Emergency lights strobe as crew scrambles for the airlock.",flags:{blue_green_screen:1,water_work:1,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Practical water dump rigs + CG water enhancement","Cracking glass FX (practical breakaway + CG)","Underwater tank work for exterior shots","Actor safety in rising water levels"],capture:"Build practical lab set over water tank. Controlled water dump from overhead rigs. CG water extension for volume. Breakaway glass for hero crack shot.",notes:"Water work always overruns â budget 50% more time. Safety divers on standby. Waterproof all electronics."},
-  {id:"4",slug:"EXT. CITY ROOFTOP â DUSK",ie:"EXT",dn:"DUSK",pg:"2/8",ch:["DETECTIVE REYES","MAYA"],cats:["aerial_height","weather_atmosphere","digital_augmentation"],cr:3,sr:4,shots:{min:4,l:8,max:12},sum:"Reyes confronts Maya on a rooftop at sunset. City skyline behind them. She steps onto the ledge â he talks her back.",flags:{blue_green_screen:1,water_work:0,aerial_drone:1,fire_pyro:0,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:1,multi_unit:0},reasons:["Narrow golden hour shooting window","Green screen skyline extension","Drone establishing shots","Fall safety rigging for ledge work"],capture:"Shoot on practical rooftop with green screen for skyline. Drone flyover for establishing shot. Safety wire for ledge scenes.",notes:"Emotional climax â performances matter more than VFX. Schedule 3 sunset attempts. Wire safety non-negotiable."},
-  {id:"5",slug:"INT. POLICE PRECINCT â DAY",ie:"INT",dn:"DAY",pg:"3/8",ch:["DETECTIVE REYES","CAPTAIN OKAFOR","OFFICER CHEN"],cats:[],cr:1,sr:1,shots:{min:0,l:1,max:2},sum:"Reyes briefs the team on the warehouse raid. Tension with Captain Okafor over jurisdiction. Standard dialogue scene.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:0,crowd_bg:0,stunts:0,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Minimal VFX â monitor screen inserts only"],capture:"Standard coverage. Shoot monitor graphics separately for compositing.",notes:"Character development scene. No VFX concerns beyond screen inserts."},
-  {id:"6",slug:"EXT. HARBOR DOCKS â NIGHT",ie:"EXT",dn:"NIGHT",pg:"4/8",ch:["DETECTIVE REYES","MAYA","ARMED GUARDS","DOCK WORKERS"],cats:["weapons_combat","crowd_extras","weather_atmosphere"],cr:4,sr:3,shots:{min:10,l:16,max:24},sum:"Rain-soaked confrontation at the docks. Gunfire exchange among shipping containers. Fog rolling off the water.",flags:{blue_green_screen:0,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:1,stunts:1,animals:0,children:0,night_exterior:1,weather_dependent:0,multi_unit:0},reasons:["Rain tower coordination for consistent rain","Muzzle flash and squib work","Fog machine integration with practical rain","Night exterior lighting for large set"],capture:"Rain towers for consistent precipitation. Pre-rig containers with squib charges. Fog machines at water line. Multiple night shoots.",notes:"Night rain shoots are slow â budget 40% more time. Protect camera equipment. Actor comfort breaks for wet work."},
-  {id:"7",slug:"INT. SIGNAL TOWER â CONTROL ROOM â NIGHT",ie:"INT",dn:"NIGHT",pg:"5 2/8",ch:["DETECTIVE REYES","DR. VASQUEZ","MAYA","TECH WILSON"],cats:["digital_augmentation","destruction_damage","fire_pyro"],cr:4,sr:4,shots:{min:12,l:20,max:30},sum:"Final showdown in the signal tower. Banks of monitors display the countdown. Explosion rocks the building. Reyes makes the critical choice â cut the signal or let it transmit.",flags:{blue_green_screen:1,water_work:0,aerial_drone:0,fire_pyro:1,crowd_bg:0,stunts:1,animals:0,children:0,night_exterior:0,weather_dependent:0,multi_unit:0},reasons:["Holographic display FX for signal visualization","Screen content for 20+ monitors","Structural collapse FX (practical + CG)","Interactive lighting from displays","Pyro for explosion damage"],capture:"Build practical control room with LED screens for interactive light. CG holographic overlay in post. Pre-rig for structural damage practical FX. Green screen window views.",notes:"Climactic scene â every department converges here. Schedule last in production. Lock screen content in pre-vis."}
-];
+/* ── Upload Handler ──────────────────────────────── */
+var fileInput = document.getElementById('fileInput');
+var heroEl = document.getElementById('heroUpload');
+var statusEl = document.getElementById('uploadStatus');
 
-let COSTS = [
-  {sev:5,title:"Car Tumble Stunt Coordination",desc:"The cliff-edge car tumble requires precision stunt driving, CG takeover, and helicopter coordination. Expect 3 full days minimum for the sequence with backup weather days.",aff:"Scene 2"},
-  {sev:5,title:"Warehouse Explosion Scale",desc:"The hero explosion requires controlled pyro, CG extension, and collapsing scaffolding rigs. Each full take costs significant reset time â budget for limited attempts.",aff:"Scene 1"},
-  {sev:4,title:"Water Work Overtime (Lab Flood)",desc:"Water-based practical effects consistently overrun by 40-60%. Drainage, reset time, actor dry-off breaks. Budget 50% more time than estimated.",aff:"Scene 3"},
-  {sev:4,title:"Night Rain Shoot Logistics",desc:"Rain tower coordination with night exterior lighting is slow. Expect 40% less coverage per hour than dry night shoots. Equipment waterproofing adds setup time.",aff:"Scene 6"},
-  {sev:3,title:"Golden Hour Rooftop Window",desc:"The rooftop confrontation depends on a 15-minute golden hour window. Schedule 3 sunset attempts minimum. Each failed attempt costs a full company move.",aff:"Scene 4"},
-  {sev:3,title:"Monitor Content Lock",desc:"The signal tower has 20+ screens requiring pre-produced content. Late changes to screen graphics cascade into compositing rework. Lock content 4 weeks before shoot.",aff:"Scene 7"}
-];
-
-let QS = [
-  {p:"critical",t:"What is the target VFX shot count for the car chase? The script supports 20-50 shots â at $8-20K per shot, this single sequence ranges from $160K to $1M.",cat:"Budget",dept:"Producer"},
-  {p:"critical",t:"Will the warehouse explosion be primarily practical or CG-enhanced? Full practical limits takes but looks authentic. Heavy CG allows more control but doubles post costs.",cat:"Creative",dept:"VFX Supervisor"},
-  {p:"high",t:"Is the underwater lab a tank build or dry-for-wet? Tank work is more realistic but adds 3-4 days. Dry-for-wet with CG water is faster but may look less convincing.",cat:"Technical",dept:"VFX Supervisor"},
-  {p:"high",t:"How many rain nights are budgeted for the dock sequence? The script implies a lengthy scene but budget may only support 2-3 nights of rain tower work.",cat:"Budget",dept:"Producer"},
-  {p:"medium",t:"Will the signal tower holographic displays be practical LED volumes or full CG in post? LED volumes give interactive light on actors but limit camera angles.",cat:"Technical",dept:"VFX Supervisor"},
-  {p:"medium",t:"What is the cliff fall approach â full CG car, miniature, or hybrid? Each has different cost/quality tradeoffs. CG is most flexible but most expensive.",cat:"Creative",dept:"VFX Supervisor"},
-  {p:"low",t:"Are the precinct monitor inserts live feeds or pre-recorded graphics? Pre-recorded is cheaper but live playback gives more natural actor eyelines.",cat:"Style",dept:"DP / Camera"}
-];
-
-// ================================================================
-// STATE
-// ================================================================
-let allExpanded = false;
-let currentView = 'card';
-let activeFilter = null;       // {type:'char'|'cat', value:'...'}
-let searchQuery = '';
-let sortState = { col: null, asc: true };
-
-// ================================================================
-// UTILITIES
-// ================================================================
-function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
-
-function esc(s) {
-  if (typeof s !== 'string') return String(s ?? '');
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-// ================================================================
-// RENDER FUNCTIONS
-// ================================================================
-function renderExecSummary() {
-  const totalShots = S.reduce((a,s) => a + s.shots.l, 0);
-  const vfxScenes = S.filter(s => s.cats.length > 0).length;
-  const avgCost = (S.reduce((a,s) => a + s.cr, 0) / S.length).toFixed(1);
-  const minShots = S.reduce((a,s) => a + s.shots.min, 0);
-  const maxShots = S.reduce((a,s) => a + s.shots.max, 0);
-  const high = S.filter(s => s.cr >= 4).length;
-
-  document.getElementById('execSummary').innerHTML = `
-    <div class="exec-stat"><div class="exec-val">${S.length}</div><div class="exec-label">Scenes</div><div class="exec-note">${vfxScenes} with VFX</div></div>
-    <div class="exec-stat"><div class="exec-val">${totalShots}</div><div class="exec-label">Est. VFX Shots</div><div class="exec-note">${minShots}â${maxShots} range</div></div>
-    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[clamp(Math.round(parseFloat(avgCost)),1,5)]}">${avgCost}</div><div class="exec-label">Avg Cost Risk</div><div class="exec-note">1â5 scale</div></div>
-    <div class="exec-stat"><div class="exec-val" style="color:${RC_HEX[5]}">${high}</div><div class="exec-label">High Risk Scenes</div><div class="exec-note">cost â¥ 4</div></div>`;
-}
-
-function renderTimeline() {
-  const bars = document.getElementById('timelineBars');
-  const labels = document.getElementById('timelineLabels');
-
-  bars.innerHTML = S.map((s, i) => {
-    const pct = 20 + (s.cr / 5) * 80;
-    const loc = s.slug.split('â')[1]?.trim() || s.slug;
-    return `<div class="t-bar" data-scene="${s.id}" style="height:${pct}%;background:${RC[s.cr]};animation-delay:${i*0.04}s" onclick="jumpToScene('${s.id}')">
-      <div class="t-bar-tip"><strong>Scene ${esc(s.id)}</strong><br>${esc(loc)}<br>Cost ${s.cr}/5 Â· Sched ${s.sr}/5 Â· ${s.shots.l} shots</div>
-    </div>`;
-  }).join('');
-
-  labels.innerHTML = S.map(s => `<div class="t-label">${esc(s.id)}</div>`).join('');
-}
-
-function renderScenes() {
-  const el = document.getElementById('sceneSheets');
-  const maxShots = Math.max(...S.map(x => x.shots.max), 1);
-
-  el.innerHTML = S.map(s => {
-    const rangeL = (s.shots.min / maxShots) * 100;
-    const rangeW = ((s.shots.max - s.shots.min) / maxShots) * 100;
-    const likelyP = (s.shots.l / maxShots) * 100;
-    const borderColor = RC_HEX[clamp(s.cr,1,5)];
-
-    const chars = s.ch.length
-      ? `<div class="field"><div class="field-label">Characters</div><div class="char-tags">${s.ch.map(c => `<span class="char-tag" onclick="event.stopPropagation();filterBy('char','${esc(c)}')">${esc(c)}</span>`).join('')}</div></div>`
-      : '';
-
-    const cats = s.cats.length
-      ? `<div class="field"><div class="field-label">VFX Categories</div><div class="vfx-tags">${s.cats.map(c => {
-          const col = CC[c] || '#888';
-          return `<span class="vfx-tag" onclick="event.stopPropagation();filterBy('cat','${esc(c)}')" style="color:${col};border-color:${col}40;background:${col}0a"><span class="vfx-dot" style="background:${col}"></span>${esc(CL[c]||c)}</span>`;
-        }).join('')}</div></div>`
-      : '';
-
-    const flags = Object.entries(FN).map(([k,v]) =>
-      `<span class="s-flag${s.flags[k] ? ' on' : ''}">${esc(v)}</span>`
-    ).join('');
-
-    return `
-    <div class="scene-sheet collapsed animate-in" id="scene-${esc(s.id)}" data-scene="${esc(s.id)}" style="border-left-color:${borderColor}">
-      <div class="scene-head" onclick="toggleScene('${esc(s.id)}')">
-        <span class="scene-number">${esc(s.id)}</span>
-        <span class="scene-slug">${esc(s.slug)}</span>
-        <div class="scene-meta-pills">
-          <span class="meta-pill">${esc(s.ie)}</span>
-          <span class="meta-pill">${esc(s.dn)}</span>
-          <span class="meta-pill">${s.pg} pg</span>
-          <span class="risk-badge" style="color:${RC[s.cr]};border-color:${RC[s.cr]};background:${RC[s.cr]}0a">COST ${s.cr}/5</span>
-          <span class="risk-badge" style="color:${RC[s.sr]};border-color:${RC[s.sr]};background:${RC[s.sr]}0a">SCHED ${s.sr}/5</span>
-          <span class="scene-head-shots">${s.shots.l} shots</span>
-        </div>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-      </div>
-      <div class="scene-content">
-        <div class="scene-body">
-          <div class="scene-col">
-            <div class="field"><div class="field-label">Summary</div><div class="field-text">${esc(s.sum)}</div></div>
-            ${chars}
-            ${cats}
-            <div class="field">
-              <div class="field-label">VFX Shot Estimate</div>
-              <div class="shot-range">
-                <div class="shot-bar-bg">
-                  <div class="shot-bar-fill" style="left:${rangeL}%;width:${rangeW}%;background:${RC[s.cr]}"></div>
-                  <div class="shot-bar-mid" style="left:${likelyP}%"></div>
-                </div>
-                <div class="shot-labels"><span>${s.shots.min}</span><span class="likely">${s.shots.l} likely</span><span>${s.shots.max}</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="scene-col">
-            <div class="field"><div class="field-label">Risk Reasons</div><ul class="reason-list">${s.reasons.map(r => `<li><span class="reason-bullet"></span>${esc(r)}</li>`).join('')}</ul></div>
-            <div class="field"><div class="field-label">Suggested Capture</div><div class="callout callout-capture">${esc(s.capture)}</div></div>
-            <div class="field"><div class="field-label">Notes for Producer</div><div class="callout callout-notes">${esc(s.notes)}</div></div>
-          </div>
-        </div>
-        <div class="scene-flags">${flags}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  const sorted = [...S];
-
-  if (sortState.col) {
-    sorted.sort((a,b) => {
-      let va, vb;
-      switch(sortState.col) {
-        case 'id': va = parseInt(a.id); vb = parseInt(b.id); break;
-        case 'slug': va = a.slug; vb = b.slug; break;
-        case 'cr': va = a.cr; vb = b.cr; break;
-        case 'sr': va = a.sr; vb = b.sr; break;
-        case 'shots': va = a.shots.l; vb = b.shots.l; break;
-        default: return 0;
-      }
-      if (va < vb) return sortState.asc ? -1 : 1;
-      if (va > vb) return sortState.asc ? 1 : -1;
-      return 0;
-    });
-  }
-
-  tbody.innerHTML = sorted.map(s => `
-    <tr onclick="setView('card');setTimeout(()=>jumpToScene('${esc(s.id)}'),100)">
-      <td style="font-family:var(--mono);font-weight:600">${esc(s.id)}</td>
-      <td style="font-family:var(--mono);font-size:11px">${esc(s.slug)}</td>
-      <td class="risk-cell" style="color:${RC_HEX[clamp(s.cr,1,5)]}">${s.cr}</td>
-      <td class="risk-cell" style="color:${RC_HEX[clamp(s.sr,1,5)]}">${s.sr}</td>
-      <td style="font-family:var(--mono);text-align:center">${s.shots.l}</td>
-      <td><div class="vfx-tags">${s.cats.map(c => {
-        const col = CC[c]||'#888';
-        return `<span class="vfx-tag" style="color:${col};border-color:${col}40;background:${col}0a;cursor:default;font-size:9px;padding:1px 6px"><span class="vfx-dot" style="background:${col}"></span>${esc(CL[c]||c)}</span>`;
-      }).join('')}</div></td>
-    </tr>
-  `).join('');
-}
-
-function renderCosts() {
-  const sevColors = { 5: RC_HEX[5], 4: RC_HEX[4], 3: RC_HEX[3], 2: RC_HEX[2], 1: RC_HEX[1] };
-  document.getElementById('costItems').innerHTML = COSTS.map(c => {
-    const col = sevColors[c.sev] || RC_HEX[3];
-    return `<div class="cost-item"><div class="cost-sev-badge" style="color:${col};border-color:${col}30;background:${col}0a">${c.sev}</div><div class="cost-content"><div class="cost-title">${esc(c.title)}</div><div class="cost-desc">${esc(c.desc)}</div><div class="cost-affected">Affects: ${esc(c.aff)}</div></div></div>`;
-  }).join('');
-}
-
-function renderQuestions() {
-  const byDept = {};
-  QS.forEach(q => { if (!byDept[q.dept]) byDept[q.dept] = []; byDept[q.dept].push(q); });
-  const pc = { critical: RC_HEX[5], high: RC_HEX[4], medium: RC_HEX[3], low: RC_HEX[1] };
-
-  document.getElementById('questionItems').innerHTML = Object.entries(byDept).map(([dept, qs]) => `
-    <div class="q-group"><div class="q-group-label">For the ${esc(dept)}</div>
-    ${qs.map((q, i) => `<div class="q-item"><span class="q-marker">${i+1}.</span><div class="q-text">${esc(q.t)}</div><span class="q-priority" style="color:${pc[q.p]};border-color:${pc[q.p]}30;background:${pc[q.p]}0a">${esc(q.p)}</span></div>`).join('')}
-    </div>`).join('');
-}
-
-function renderJumpMenu() {
-  const menu = document.getElementById('jumpMenu');
-  menu.innerHTML = S.map(s => {
-    const col = RC_HEX[clamp(s.cr,1,5)];
-    const loc = s.slug.split('â')[1]?.trim() || s.slug;
-    return `<div class="jump-item" onclick="jumpToScene('${esc(s.id)}');closeJumpMenu()">
-      <span class="jump-item-dot" style="background:${col}"></span>
-      <span class="jump-item-id">${esc(s.id)}</span>
-      <span class="jump-item-slug">${esc(loc)}</span>
-    </div>`;
-  }).join('');
-}
-
-// ================================================================
-// INTERACTIONS
-// ================================================================
-function toggleScene(id) {
-  const el = document.getElementById('scene-' + id);
-  if (el) el.classList.toggle('collapsed');
-  updateExpandBtn();
-}
-
-function toggleExpandAll() {
-  allExpanded = !allExpanded;
-  document.querySelectorAll('.scene-sheet').forEach(el => {
-    el.classList.toggle('collapsed', !allExpanded);
-  });
-  updateExpandBtn();
-}
-
-function updateExpandBtn() {
-  const total = document.querySelectorAll('.scene-sheet').length;
-  const collapsed = document.querySelectorAll('.scene-sheet.collapsed').length;
-  allExpanded = collapsed === 0;
-  document.getElementById('expandAllBtn').textContent = allExpanded ? 'Collapse All' : 'Expand All';
-}
-
-function jumpToScene(id) {
-  const el = document.getElementById('scene-' + id);
-  if (!el) return;
-
-  // Expand if collapsed
-  el.classList.remove('collapsed');
-  updateExpandBtn();
-
-  // Scroll to it
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  // Flash the timeline bar
-  const bar = document.querySelector(`.t-bar[data-scene="${id}"]`);
-  if (bar) {
-    bar.classList.add('flash');
-    setTimeout(() => bar.classList.remove('flash'), 400);
-  }
-}
-
-function setView(view) {
-  currentView = view;
-  document.getElementById('cardViewBtn').classList.toggle('active', view === 'card');
-  document.getElementById('tableViewBtn').classList.toggle('active', view === 'table');
-  document.getElementById('cardView').classList.toggle('hidden', view !== 'card');
-  document.getElementById('tableView').classList.toggle('active', view === 'table');
-  if (view === 'table') renderTable();
-}
-
-function sortTable(col) {
-  if (sortState.col === col) {
-    sortState.asc = !sortState.asc;
-  } else {
-    sortState.col = col;
-    sortState.asc = true;
-  }
-
-  // Update header arrows
-  document.querySelectorAll('.scene-table th').forEach(th => {
-    const arrow = th.querySelector('.sort-arrow');
-    th.classList.remove('sorted');
-    if (arrow) arrow.textContent = '';
-    if (th.dataset.sort === col) {
-      th.classList.add('sorted');
-      if (arrow) arrow.textContent = sortState.asc ? 'â²' : 'â¼';
-    }
-  });
-
-  renderTable();
-}
-
-// ================================================================
-// FILTERING
-// ================================================================
-function filterBy(type, value) {
-  if (activeFilter && activeFilter.type === type && activeFilter.value === value) {
-    clearFilter();
-    return;
-  }
-  activeFilter = { type, value };
-  applyFilter();
-}
-
-function clearFilter() {
-  activeFilter = null;
-  applyFilter();
-}
-
-function applyFilter() {
-  const indicator = document.getElementById('filterIndicator');
-  const filterText = document.getElementById('filterText');
-
-  if (!activeFilter) {
-    indicator.classList.remove('visible');
-    document.querySelectorAll('.scene-sheet').forEach(el => {
-      el.classList.remove('dimmed');
-    });
-    // Reset pill styles
-    document.querySelectorAll('.char-tag, .vfx-tag').forEach(el => el.classList.remove('active'));
-    return;
-  }
-
-  const label = activeFilter.type === 'char' ? `Character: ${activeFilter.value}` : `Category: ${CL[activeFilter.value] || activeFilter.value}`;
-  filterText.textContent = `Filtering by ${label}`;
-  indicator.classList.add('visible');
-
-  // Update pill styles
-  document.querySelectorAll('.char-tag').forEach(el => {
-    el.classList.toggle('active', activeFilter.type === 'char' && el.textContent.trim() === activeFilter.value);
-  });
-  document.querySelectorAll('.vfx-tag').forEach(el => {
-    const catName = el.textContent.trim();
-    el.classList.toggle('active', activeFilter.type === 'cat' && (CL[activeFilter.value] || activeFilter.value) === catName);
-  });
-
-  // Dim non-matching scenes
-  S.forEach(s => {
-    const el = document.getElementById('scene-' + s.id);
-    if (!el) return;
-    let match = false;
-    if (activeFilter.type === 'char') {
-      match = s.ch.includes(activeFilter.value);
-    } else if (activeFilter.type === 'cat') {
-      match = s.cats.includes(activeFilter.value);
-    }
-    el.classList.toggle('dimmed', !match);
-  });
-}
-
-// ================================================================
-// SEARCH
-// ================================================================
-function handleSearch(query) {
-  searchQuery = query.toLowerCase().trim();
-  const counter = document.getElementById('searchCount');
-
-  if (!searchQuery) {
-    counter.classList.remove('visible');
-    document.querySelectorAll('.scene-sheet').forEach(el => el.classList.remove('hidden'));
-    return;
-  }
-
-  let visible = 0;
-  S.forEach(s => {
-    const el = document.getElementById('scene-' + s.id);
-    if (!el) return;
-    const text = [s.slug, s.sum, ...s.ch, ...s.reasons, s.capture, s.notes, ...s.cats.map(c => CL[c]||c)].join(' ').toLowerCase();
-    const match = text.includes(searchQuery);
-    el.classList.toggle('hidden', !match);
-    if (match) visible++;
-  });
-
-  counter.textContent = `${visible} of ${S.length}`;
-  counter.classList.add('visible');
-}
-
-// ================================================================
-// NAV
-// ================================================================
-function updateNav() {
-  const sections = ['summary','scenes','costs','questions'];
-  const y = window.scrollY + 100;
-  let active = 'summary';
-  for (const id of sections) {
-    const el = document.getElementById(id);
-    if (el && el.offsetTop <= y) active = id;
-  }
-  document.querySelectorAll('.nav-links a').forEach(a => {
-    a.classList.toggle('active', a.getAttribute('href') === '#' + active);
-  });
-  // Mobile menu
-  document.querySelectorAll('.nav-mobile-menu a').forEach(a => {
-    a.classList.toggle('active', a.getAttribute('href') === '#' + active);
-  });
-}
-
-// Back to top
-function updateBackToTop() {
-  document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
-}
-
-function toggleMobileMenu() {
-  document.getElementById('mobileMenu').classList.toggle('open');
-}
-function closeMobileMenu() {
-  document.getElementById('mobileMenu').classList.remove('open');
-}
-
-// Jump menu
-document.getElementById('jumpBtn').addEventListener('click', function() {
-  document.getElementById('jumpMenu').classList.toggle('open');
-});
-function closeJumpMenu() {
-  document.getElementById('jumpMenu').classList.remove('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.jump-dropdown')) closeJumpMenu();
+fileInput.addEventListener('change', function(e){
+  if(e.target.files.length) handleUpload(e.target.files[0]);
 });
 
-// Search input
-document.getElementById('searchInput').addEventListener('input', function() {
-  handleSearch(this.value);
+// Drag and drop
+heroEl.addEventListener('dragover', function(e){e.preventDefault();heroEl.classList.add('drag-over')});
+heroEl.addEventListener('dragleave', function(){heroEl.classList.remove('drag-over')});
+heroEl.addEventListener('drop', function(e){
+  e.preventDefault();heroEl.classList.remove('drag-over');
+  if(e.dataTransfer.files.length) handleUpload(e.dataTransfer.files[0]);
 });
 
-// Scroll listeners
-window.addEventListener('scroll', function() {
-  updateNav();
-  updateBackToTop();
-}, { passive: true });
+async function handleUpload(file){
+  statusEl.className = 'upload-status';
+  statusEl.innerHTML = '<span class="spinner"></span> Uploading and analyzing <strong>' + file.name + '</strong> ...';
 
-// ================================================================
-// INTERSECTION OBSERVER â fade-in animation
-// ================================================================
-function setupObserver() {
-  if (!('IntersectionObserver' in window)) {
-    document.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
-    return;
-  }
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-
-  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
-}
-
-// ================================================================
-// LOAD JSON â map BreakdownOutput to UI format and re-render
-// ================================================================
-function mapBreakdownToUI(data) {
-  // Map scenes
-  S.length = 0;
-  (data.scenes || []).forEach(scene => {
-    const flags = scene.production_flags || {};
-    S.push({
-      id: scene.scene_id || '',
-      slug: scene.slugline || '',
-      ie: (scene.int_ext || '').toUpperCase(),
-      dn: (scene.day_night || '').toUpperCase(),
-      pg: scene.page_count_eighths ? scene.page_count_eighths + '/8' : 'â',
-      ch: scene.characters || [],
-      cats: (scene.vfx_categories || []),
-      cr: scene.cost_risk_score || 1,
-      sr: scene.schedule_risk_score || 1,
-      shots: {
-        min: scene.vfx_shot_count_estimate?.min || 0,
-        l: scene.vfx_shot_count_estimate?.likely || 0,
-        max: scene.vfx_shot_count_estimate?.max || 0
-      },
-      sum: scene.scene_summary || '',
-      flags: {
-        blue_green_screen: flags.blue_green_screen ? 1 : 0,
-        water_work: flags.water ? 1 : 0,
-        aerial_drone: flags.aerial_drone ? 1 : 0,
-        fire_pyro: flags.fire_smoke ? 1 : 0,
-        crowd_bg: flags.crowds ? 1 : 0,
-        stunts: flags.stunts ? 1 : 0,
-        animals: flags.creatures ? 1 : 0,
-        children: flags.children ? 1 : 0,
-        night_exterior: flags.night_exterior ? 1 : 0,
-        weather_dependent: flags.weather ? 1 : 0,
-        multi_unit: flags.multi_unit ? 1 : 0
-      },
-      reasons: scene.risk_reasons || [],
-      capture: (scene.suggested_capture || []).join('. '),
-      notes: Array.isArray(scene.notes_for_producer)
-        ? scene.notes_for_producer.join(' ')
-        : (scene.notes_for_producer || '')
-    });
-  });
-
-  // Map hidden costs
-  COSTS.length = 0;
-  (data.hidden_cost_radar || []).forEach(c => {
-    const sevMap = {critical:5, high:4, medium:3, low:1};
-    COSTS.push({
-      sev: sevMap[c.severity] || 3,
-      title: c.flag || '',
-      desc: c.why_it_matters || '',
-      aff: (c.where || []).map(w => 'Scene ' + w).join(', ')
-    });
-  });
-
-  // Map questions
-  QS.length = 0;
-  const kq = data.key_questions_for_team || {};
-  const deptMap = {for_producer:'Producer', for_vfx_supervisor:'VFX Supervisor', for_dp_camera:'DP / Camera', for_locations_art_dept:'Locations / Art Dept'};
-  Object.entries(deptMap).forEach(([key, dept]) => {
-    (kq[key] || []).forEach(q => {
-      QS.push({ p: 'medium', t: q, cat: '', dept: dept });
-    });
-  });
-
-  // Update title and metadata
-  const ps = data.project_summary || {};
-  document.getElementById('projectTitle').textContent = ps.project_title || 'Untitled Project';
-  document.getElementById('metaScenes').textContent = (data.scenes || []).length + ' scenes';
-
-  // Re-render everything
-  renderAll();
-}
-
-function renderAll() {
-  renderExecSummary();
-  renderTimeline();
-  renderScenes();
-  renderCosts();
-  renderQuestions();
-  renderJumpMenu();
-  setupObserver();
-  updateExpandBtn();
-  // Reset state
-  activeFilter = null;
-  searchQuery = '';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchCount').classList.remove('visible');
-  document.getElementById('filterIndicator').classList.remove('visible');
-  if (currentView === 'table') renderTable();
-}
-
-
-function showStatus(message, type) {
-  var el = document.getElementById('statusLine');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'statusLine';
-    el.style.cssText = 'text-align:center;font-family:var(--mono);font-size:12px;padding:8px 0;';
-    var title = document.querySelector('.title-block');
-    if (title) title.appendChild(el);
-  }
-  var colors = { info: 'var(--text-3)', success: 'var(--accent)', error: '#c4463a' };
-  el.style.color = colors[type] || colors.info;
-  el.textContent = message;
-  if (type === 'success') {
-    setTimeout(function() { el.textContent = ''; }, 5000);
-  }
-}
-
-function handleScriptFile(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (ext === 'json') {
-    loadJsonFile(file);
-    return;
-  }
-  const supported = ['docx', 'doc', 'txt', 'fountain', 'rtf', 'fdx', 'pdf'];
-  if (supported.indexOf(ext) === -1) {
-    showStatus('Unsupported file format: .' + ext, 'error');
-    return;
-  }
-  // Always try backend first, fall back to client-side parsing
-  uploadToBackend(file)
-    .then(function(data) {
-      console.log('Backend parsed ' + file.name + ': ' + data.scene_count + ' scenes');
-      showStatus('Parsed ' + data.scene_count + ' scenes. Analyzing with Claude...', 'info');
-      // Show basic parse results immediately
-      mapBreakdownToUI(backendToUI(data));
-      // Then trigger Claude analysis
-      return analyzeWithClaude();
-    })
-    .catch(function(backendErr) {
-      console.warn('Backend unavailable (' + backendErr.message + '), falling back to client-side parsing');
-      showStatus('Backend unavailable, using client-side parsing', 'info');
-      parseClientSide(file);
-    });
-}
-
-function uploadToBackend(file) {
-  var formData = new FormData();
-  formData.append('file', file);
-  formData.append('title', file.name.replace(/\.[^.]+$/, ''));
-  var apiBase = window.location.origin;
-  return fetch(apiBase + '/api/script/upload', {
-    method: 'POST',
-    body: formData
-  }).then(function(resp) {
-    if (!resp.ok) {
-      return resp.json().then(function(err) {
-        throw new Error(err.error || 'Upload failed: HTTP ' + resp.status);
-      });
-    }
-    return resp.json();
-  });
-}
-
-function backendToUI(data) {
-  // Map backend /api/script/upload response → mapBreakdownToUI format
-  var scenes = (data.scenes || []).map(function(s) {
-    return {
-      scene_id: String(s.scene_number || ''),
-      slugline: s.slugline || '',
-      int_ext: s.int_ext || '',
-      day_night: s.day_night || '',
-      characters: s.characters || [],
-      vfx_categories: (s.vfx_triggers || []).map(function(t) { return t.category; }),
-      cost_risk_score: 1,
-      schedule_risk_score: 1,
-      vfx_shot_count_estimate: { min: 0, likely: 0, max: 0 },
-      scene_summary: '',
-      production_flags: {},
-      risk_reasons: [],
-      suggested_capture: [],
-      notes_for_producer: (s.vfx_triggers || []).map(function(t) {
-        return t.keyword + ': ' + t.context;
-      }).filter(function(n) { return n && n !== ': '; }),
-      word_count: s.word_count || 0
-    };
-  });
-  return {
-    project_summary: {
-      project_title: data.title || 'Untitled',
-      total_scenes: data.scene_count || scenes.length,
-      format: 'Backend Parse'
-    },
-    scenes: scenes,
-    hidden_cost_radar: [],
-    key_questions_for_team: {}
-  };
-}
-
-function exportCSV() {
-  window.location.href = window.location.origin + '/api/export/csv';
-}
-function exportHTML() {
-  window.location.href = window.location.origin + '/api/export/html';
-}
-
-function analyzeWithClaude() {
-  var apiBase = window.location.origin;
-  return fetch(apiBase + '/api/script/analyze', { method: 'POST' })
-    .then(function(resp) {
-      if (!resp.ok) {
-        return resp.json().then(function(err) {
-          throw new Error(err.error || 'Analysis failed');
-        });
-      }
-      return resp.json();
-    })
-    .then(function(data) {
-      showStatus('Analysis complete. ' + (data.scenes || []).length + ' scenes with VFX breakdown.', 'success');
-      mapBreakdownToUI(data);
-      var expBtns = document.getElementById('exportButtons');
-      if (expBtns) expBtns.style.display = 'block';
-    })
-    .catch(function(err) {
-      showStatus('Claude analysis failed: ' + err.message + '. Showing basic parse results.', 'error');
-    });
-}
-
-function parseClientSide(file) {
+  // Check if it is a JSON file (pre-built breakdown)
   var ext = file.name.split('.').pop().toLowerCase();
-  if (ext === 'docx' || ext === 'doc') {
-    parseDocxFile(file);
-  } else if (ext === 'fdx') {
-    parseFdxFile(file);
-  } else if (ext === 'pdf') {
-    showStatus('PDF upload requires the backend server. Start with: uvicorn sba.app:app --reload', 'error');
-  } else {
-    // txt, fountain, rtf
-    parseTextFile(file);
-  }
-}
-
-function parseDocxFile(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    mammoth.extractRawText({arrayBuffer: e.target.result})
-      .then(function(result) {
-        const text = result.value;
-        const data = textToBreakdown(text, file.name);
-        mapBreakdownToUI(data);
-      })
-      .catch(function(err) {
-        showStatus('Failed to parse Word document: ' + err.message, 'error');
-      });
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function parseTextFile(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    const data = textToBreakdown(text, file.name);
-    mapBreakdownToUI(data);
-  };
-  reader.readAsText(file);
-}
-
-function parseFdxFile(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(e.target.result, 'text/xml');
-      const paragraphs = xml.querySelectorAll('Paragraph');
-      let text = '';
-      paragraphs.forEach(function(p) {
-        const type = p.getAttribute('Type') || '';
-        const content = Array.from(p.querySelectorAll('Text')).map(function(t) { return t.textContent; }).join('');
-        if (type === 'Scene Heading') {
-          text += '\n' + content + '\n';
-        } else if (type === 'Action') {
-          text += content + '\n';
-        } else if (type === 'Character') {
-          text += '\n' + content + '\n';
-        } else if (type === 'Dialogue') {
-          text += content + '\n';
-        } else {
-          text += content + '\n';
-        }
-      });
-      const data = textToBreakdown(text, file.name);
-      mapBreakdownToUI(data);
-    } catch (err) {
-      showStatus('Failed to parse Final Draft file: ' + err.message, 'error');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function textToBreakdown(text, filename) {
-  var sceneHeadingRe = /^\s*(INT\.?|EXT\.?|INT\.?\/EXT\.?|I\/E\.?)\s+.+/gim;
-  var lines = text.split('\n');
-  var scenes = [];
-  var currentScene = null;
-  var sceneNum = 0;
-
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim();
-    if (sceneHeadingRe.test(line)) {
-      sceneHeadingRe.lastIndex = 0;
-      if (currentScene) {
-        scenes.push(currentScene);
-      }
-      sceneNum++;
-      var isInt = /^\s*INT/i.test(line);
-      var isDay = /DAY/i.test(line);
-      currentScene = {
-        scene_id: String(sceneNum),
-        slugline: line,
-        int_ext: isInt ? 'INT' : 'EXT',
-        day_night: isDay ? 'DAY' : 'NIGHT',
-        characters: [],
-        vfx_categories: [],
-        cost_risk_score: 1,
-        schedule_risk_score: 1,
-        vfx_shot_count_estimate: { min: 0, likely: 0, max: 0 },
-        scene_summary: '',
-        production_flags: {},
-        risk_reasons: [],
-        suggested_capture: [],
-        notes_for_producer: '',
-        _body: ''
-      };
-    } else if (currentScene) {
-      currentScene._body += line + '\n';
-      // Detect CHARACTER names (all-caps lines, standard screenplay format)
-      if (/^[A-Z][A-Z\s]+$/.test(line) && line.length > 1 && line.length < 40) {
-        if (currentScene.characters.indexOf(line) === -1) {
-          currentScene.characters.push(line);
-        }
-      }
-    }
-  }
-  if (currentScene) scenes.push(currentScene);
-
-  return {
-    project_summary: {
-      project_title: filename.replace(/\.[^.]+$/, ''),
-      total_scenes: scenes.length,
-      format: filename.split('.').pop().toUpperCase() + ' Upload'
-    },
-    scenes: scenes,
-    hidden_cost_radar: [],
-    key_questions_for_team: {}
-  };
-}
-
-function loadJsonFile(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.scenes && !data.project_summary) {
-        showStatus('Invalid JSON format', 'error');
+  if(ext === 'json'){
+    try{
+      var text = await file.text();
+      var data = JSON.parse(text);
+      if(data.scenes){
+        displayJsonBreakdown(data);
+        statusEl.innerHTML = '';
         return;
       }
-      mapBreakdownToUI(data);
-    } catch (err) {
-      showStatus('Failed to parse JSON: ' + err.message, 'error');
+    }catch(err){
+      statusEl.className = 'upload-status error';
+      statusEl.textContent = 'Invalid JSON file: ' + err.message;
+      return;
     }
-  };
-  reader.readAsText(file);
+  }
+
+  // POST to backend for real parsing
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('title', file.name.replace(/\.[^/.]+$/,''));
+
+  try{
+    var resp = await fetch(API_BASE + '/api/script/upload', {
+      method:'POST', body: formData
+    });
+
+    if(!resp.ok){
+      var errData = await resp.json().catch(function(){return {detail:'Server error'}});
+      throw new Error(errData.detail || errData.error || 'Upload failed (HTTP ' + resp.status + ')');
+    }
+
+    var data = await resp.json();
+    currentData = data;
+    displayBackendResults(data);
+    statusEl.className = 'upload-status success';
+    statusEl.innerHTML = 'Parsed <strong>' + data.scene_count + ' scenes</strong>, <strong>' + data.character_count + ' characters</strong>';
+
+    // Notify chat
+    addChatMessage('assistant', 'Script loaded: "' + data.title + '" with ' + data.scene_count + ' scenes, ' +
+      data.character_count + ' characters, approx ' + data.total_pages_estimate + ' pages. Ask me anything about it!');
+
+  }catch(err){
+    console.error('Upload failed:', err);
+    statusEl.className = 'upload-status error';
+    statusEl.textContent = 'Error: ' + err.message;
+
+    // Fallback: try client-side parsing for plain text files
+    if(ext === 'txt' || ext === 'fountain' || ext === 'rtf'){
+      statusEl.textContent += ' Trying local parsing...';
+      try{
+        var textContent = await file.text();
+        var scenes = parseTextLocally(textContent);
+        displayLocalScenes(scenes, file.name);
+        statusEl.className = 'upload-status success';
+        statusEl.textContent = 'Parsed locally (' + scenes.length + ' scenes). For full VFX analysis, start the backend server.';
+      }catch(e2){
+        statusEl.className = 'upload-status error';
+        statusEl.textContent = 'Could not parse file. Make sure the backend server is running (uvicorn sba.app:app --reload)';
+      }
+    } else {
+      statusEl.textContent += ' Make sure the backend server is running: cd src && uvicorn sba.app:app --reload';
+    }
+  }
 }
 
-// File input handler
-document.getElementById('jsonFileInput').addEventListener('change', function(e) {
-  if (e.target.files.length > 0) {
-    handleScriptFile(e.target.files[0]);
-    e.target.value = ''; // reset for re-upload
-  }
-});
+/* ── Map Backend Response to UI ────────────────────── */
+function displayBackendResults(data){
+  document.getElementById('summaryBar').classList.remove('hidden');
+  document.getElementById('filtersBar').classList.remove('hidden');
+  heroEl.classList.add('has-results');
 
-// Drag-drop
-let dragCounter = 0;
-document.addEventListener('dragenter', function(e) {
-  e.preventDefault();
-  dragCounter++;
-  document.getElementById('dropOverlay').classList.add('visible');
-});
-document.addEventListener('dragleave', function(e) {
-  e.preventDefault();
-  dragCounter--;
-  if (dragCounter <= 0) {
-    dragCounter = 0;
-    document.getElementById('dropOverlay').classList.remove('visible');
-  }
-});
-document.addEventListener('dragover', function(e) { e.preventDefault(); });
-document.addEventListener('drop', function(e) {
-  e.preventDefault();
-  dragCounter = 0;
-  document.getElementById('dropOverlay').classList.remove('visible');
-  if (e.dataTransfer.files.length > 0) {
-    const file = e.dataTransfer.files[0];
-    handleScriptFile(file);
-  }
-});
+  document.getElementById('projectTitle').textContent = data.title || 'Untitled Script';
+  document.getElementById('statScenes').textContent = data.scene_count;
+  document.getElementById('statChars').textContent = data.character_count;
+  document.getElementById('statPages').textContent = data.total_pages_estimate;
 
-// ================================================================
-// INIT
-// ================================================================
-renderExecSummary();
-renderTimeline();
-renderScenes();
-renderCosts();
-renderQuestions();
-renderJumpMenu();
-setupObserver();
-updateExpandBtn();
+  var totalVfx = 0;
+  var scenes = data.scenes.map(function(s, i){
+    var vfxCats = {};
+    var maxSeverity = 0;
+    (s.vfx_triggers || []).forEach(function(t){
+      totalVfx++;
+      vfxCats[t.category] = (vfxCats[t.category]||0) + 1;
+      if(t.severity > maxSeverity) maxSeverity = t.severity;
+    });
+
+    var risk = maxSeverity >= 4 ? 5 : maxSeverity >= 3 ? 4 : maxSeverity >= 2 ? 3 : maxSeverity >= 1 ? 2 : 1;
+
+    return {
+      id: s.scene_number || (i+1),
+      slug: s.slugline || ('SCENE ' + (i+1)),
+      ie: s.int_ext || '',
+      dn: s.day_night || '',
+      location: s.location || '',
+      characters: s.characters || [],
+      wordCount: s.word_count || 0,
+      vfxTriggers: s.vfx_triggers || [],
+      vfxCats: Object.keys(vfxCats),
+      risk: risk,
+      maxSeverity: maxSeverity
+    };
+  });
+
+  document.getElementById('statVfx').textContent = totalVfx;
+  currentScenes = scenes;
+  renderScenes(scenes);
+}
+
+/* ── Display JSON Breakdown (pre-built) ───────────── */
+function displayJsonBreakdown(data){
+  document.getElementById('summaryBar').classList.remove('hidden');
+  document.getElementById('filtersBar').classList.remove('hidden');
+  heroEl.classList.add('has-results');
+
+  var scenes = (data.scenes || []).map(function(s, i){
+    return {
+      id: s.id || s.scene_number || (i+1),
+      slug: s.slug || s.slugline || ('SCENE '+(i+1)),
+      ie: s.ie || s.int_ext || '',
+      dn: s.dn || s.day_night || '',
+      location: s.location || '',
+      characters: s.ch || s.characters || [],
+      wordCount: s.word_count || 0,
+      vfxTriggers: (s.vfx_triggers || []),
+      vfxCats: s.cats || [],
+      risk: s.cr || 1,
+      sum: s.sum || ''
+    };
+  });
+
+  document.getElementById('projectTitle').textContent = data.title || data.project_summary?.title || 'Script';
+  document.getElementById('statScenes').textContent = scenes.length;
+  document.getElementById('statPages').textContent = data.total_pages_estimate || '-';
+  document.getElementById('statChars').textContent = data.character_count || (data.characters||[]).length || '-';
+  document.getElementById('statVfx').textContent = scenes.reduce(function(n,s){return n+(s.vfxTriggers||[]).length},0);
+  currentScenes = scenes;
+  renderScenes(scenes);
+}
+
+/* ── Local Text Parsing (fallback when no backend) ── */
+function parseTextLocally(text){
+  var sceneRe = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)\s*(.+)/gim;
+  var scenes = [];
+  var match;
+  var positions = [];
+  while((match = sceneRe.exec(text)) !== null){
+    positions.push({index:match.index, heading:match[0], ie:match[1].replace(/[.\/ ]/g,''), rest:match[2]});
+  }
+  for(var i=0;i<positions.length;i++){
+    var start = positions[i].index;
+    var end = i+1<positions.length ? positions[i+1].index : text.length;
+    var body = text.substring(start, end);
+    var dn = /\bNIGHT\b/i.test(positions[i].rest) ? 'NIGHT' : 'DAY';
+    scenes.push({
+      id:i+1, slug:positions[i].heading.trim(), ie:positions[i].ie.replace('IE','INT/EXT'),
+      dn:dn, characters:[], vfxTriggers:[], vfxCats:[], risk:1, wordCount:body.split(/\s+/).length
+    });
+  }
+  return scenes;
+}
+
+function displayLocalScenes(scenes, filename){
+  document.getElementById('summaryBar').classList.remove('hidden');
+  document.getElementById('filtersBar').classList.remove('hidden');
+  heroEl.classList.add('has-results');
+  document.getElementById('projectTitle').textContent = filename.replace(/\.[^/.]+$/,'');
+  document.getElementById('statScenes').textContent = scenes.length;
+  document.getElementById('statChars').textContent = '-';
+  document.getElementById('statPages').textContent = Math.round(scenes.reduce(function(n,s){return n+s.wordCount},0)/250);
+  document.getElementById('statVfx').textContent = '0';
+  currentScenes = scenes;
+  renderScenes(scenes);
+}
+
+/* ── Render Scene Cards ──────────────────────────────── */
+function renderScenes(scenes){
+  var container = document.getElementById('scenesContainer');
+  container.innerHTML = '';
+
+  scenes.forEach(function(s){
+    var card = document.createElement('div');
+    card.className = 'scene-card';
+    card.dataset.risk = s.risk;
+    card.dataset.ie = s.ie;
+    card.dataset.hasVfx = (s.vfxTriggers && s.vfxTriggers.length > 0) ? 'true' : 'false';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'scene-header';
+    header.onclick = function(){card.classList.toggle('open')};
+
+    var headerHTML = '<span class="scene-num">#' + s.id + '</span>';
+    headerHTML += '<span class="scene-slug">' + escHtml(s.slug) + '</span>';
+    if(s.ie) headerHTML += '<span class="scene-ie ' + s.ie + '">' + s.ie + '</span>';
+    if(s.dn) headerHTML += '<span class="scene-dn">' + s.dn + '</span>';
+    if(s.vfxTriggers && s.vfxTriggers.length > 0){
+      headerHTML += '<span class="scene-vfx-count">' + s.vfxTriggers.length + ' VFX</span>';
+    }
+    headerHTML += '<span class="scene-risk risk-' + s.risk + '">' + s.risk + '</span>';
+    headerHTML += '<span class="scene-chevron">&#x203A;</span>';
+    header.innerHTML = headerHTML;
+    card.appendChild(header);
+
+    // Body
+    var body = document.createElement('div');
+    body.className = 'scene-body';
+
+    var bodyHTML = '<div class="scene-meta">';
+    if(s.wordCount) bodyHTML += '<span><strong>Words:</strong> ' + s.wordCount + '</span>';
+    if(s.location) bodyHTML += '<span><strong>Location:</strong> ' + escHtml(s.location) + '</span>';
+    bodyHTML += '<span><strong>Risk Level:</strong> ' + ['','Minimal','Mild','Moderate','High','Critical'][s.risk] + '</span>';
+    bodyHTML += '</div>';
+
+    // Characters
+    if(s.characters && s.characters.length){
+      bodyHTML += '<div style="margin:8px 0"><strong style="font-size:12px;color:var(--text3)">CHARACTERS</strong></div>';
+      bodyHTML += '<div class="scene-characters">';
+      s.characters.forEach(function(c){
+        bodyHTML += '<span class="char-chip">' + escHtml(c) + '</span>';
+      });
+      bodyHTML += '</div>';
+    }
+
+    // VFX Triggers
+    if(s.vfxTriggers && s.vfxTriggers.length){
+      bodyHTML += '<div style="margin:12px 0 6px"><strong style="font-size:12px;color:var(--text3)">VFX TRIGGERS</strong></div>';
+      bodyHTML += '<div class="vfx-tags">';
+      s.vfxTriggers.forEach(function(t){
+        var sev = t.severity || 1;
+        var catLabel = VFX_CATS[t.category] || t.category;
+        bodyHTML += '<span class="vfx-tag sev-' + Math.min(sev,5) + '">' + escHtml(catLabel) + ': ' + escHtml(t.keyword || t.matched_keyword || '') + '</span>';
+      });
+      bodyHTML += '</div>';
+
+      // Show contexts
+      s.vfxTriggers.forEach(function(t){
+        if(t.context){
+          bodyHTML += '<div class="scene-context"><strong>' + escHtml(VFX_CATS[t.category]||t.category) + ':</strong> "' + escHtml(t.context) + '"</div>';
+        }
+      });
+    }
+
+    // Summary
+    if(s.sum){
+      bodyHTML += '<div class="scene-context"><strong>Summary:</strong> ' + escHtml(s.sum) + '</div>';
+    }
+
+    body.innerHTML = bodyHTML;
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+}
+
+function escHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Filters ─────────────────────────────────────────── */
+function filterScenes(type, chip){
+  document.querySelectorAll('.filter-chip').forEach(function(c){c.classList.remove('active')});
+  if(chip) chip.classList.add('active');
+
+  var filtered = currentScenes;
+  if(type === 'vfx') filtered = currentScenes.filter(function(s){return s.vfxTriggers && s.vfxTriggers.length > 0});
+  else if(type === 'high') filtered = currentScenes.filter(function(s){return s.risk >= 4});
+  else if(type === 'INT') filtered = currentScenes.filter(function(s){return s.ie === 'INT'});
+  else if(type === 'EXT') filtered = currentScenes.filter(function(s){return s.ie === 'EXT'});
+
+  renderScenes(filtered);
+}
+
+/* ── Chat ────────────────────────────────────────────── */
+function toggleChat(){
+  document.getElementById('chatPanel').classList.toggle('open');
+}
+function toggleBudget(){
+  document.getElementById('budgetPanel').classList.toggle('open');
+}
+
+function addChatMessage(role, text){
+  var div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.textContent = text;
+  document.getElementById('chatMessages').appendChild(div);
+  document.getElementById('chatMessages').scrollTop = 999999;
+}
+
+async function sendChat(){
+  var input = document.getElementById('chatInput');
+  var msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  addChatMessage('user', msg);
+
+  try{
+    var resp = await fetch(API_BASE + '/api/chat/message', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg, context: currentData ? {
+        title: currentData.title,
+        scene_count: currentData.scene_count,
+        character_count: currentData.character_count
+      } : null})
+    });
+    if(!resp.ok) throw new Error('Chat failed');
+    var data = await resp.json();
+    var reply = data.response || data.message || data.reply || JSON.stringify(data);
+    addChatMessage('assistant', reply);
+  }catch(err){
+    addChatMessage('assistant', 'Could not connect to the AI backend. Make sure the server is running.');
+  }
+}
+
+/* ── Budget ──────────────────────────────────────────── */
+async function loadBudget(){
+  try{
+    var resp = await fetch(API_BASE + '/api/budget/summary');
+    if(!resp.ok) return;
+    var data = await resp.json();
+    if(data.total) document.getElementById('budgetTotal').textContent = '$' + Number(data.total).toLocaleString();
+    if(data.actual) document.getElementById('budgetActual').textContent = '$' + Number(data.actual).toLocaleString();
+    if(data.variance != null){
+      var vEl = document.getElementById('budgetVariance');
+      var v = Number(data.variance);
+      vEl.textContent = (v >= 0 ? '+' : '') + '$' + v.toLocaleString();
+      vEl.className = 'bval ' + (v < 0 ? 'over' : 'under');
+    }
+  }catch(e){}
+}
+
+/* ── Health Check on Load ────────────────────────────── */
+window.addEventListener('DOMContentLoaded', function(){
+  fetch(API_BASE + '/api/health').then(function(r){
+    if(r.ok) console.log('NPA backend connected');
+  }).catch(function(){
+    console.warn('NPA backend not available. Client-side only mode.');
+  });
+  loadBudget();
+
+  // Open chat by default so it is prominent
+  setTimeout(function(){ document.getElementById('chatPanel').classList.add('open'); }, 500);
+});
 </script>
-<script src="npa-integration.js"></script></body>
+
+<!-- NPA Integration Layer -->
+<script src="npa-integration.js"></script>
+</body>
 </html>
