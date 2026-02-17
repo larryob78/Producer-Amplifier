@@ -244,12 +244,76 @@ def _calculate_overtime(
 
 
 def _check_schedule_conflict(scene_a: str, scene_b: str) -> dict[str, Any]:
-    """Check scheduling conflicts between scenes. Stub for now."""
+    """Check scheduling conflicts between two scenes using loaded script data."""
+    from sba.app import _current_analysis, _current_script
+
+    def find_scene(num: str) -> dict[str, Any] | None:
+        if _current_analysis is not None:
+            for s in _current_analysis.scenes:
+                if s.scene_id == num:
+                    return {
+                        "scene_id": s.scene_id,
+                        "slugline": s.slugline,
+                        "int_ext": s.int_ext,
+                        "day_night": s.day_night,
+                        "characters": s.characters,
+                    }
+        if _current_script is not None:
+            for s in _current_script.get("scenes", []):
+                if str(s.get("scene_number")) == num:
+                    return s
+        return None
+
+    sa = find_scene(scene_a)
+    sb = find_scene(scene_b)
+
+    if not sa or not sb:
+        missing = []
+        if not sa:
+            missing.append(scene_a)
+        if not sb:
+            missing.append(scene_b)
+        return {"error": f"Scene(s) {', '.join(missing)} not found. Upload a script first."}
+
+    conflicts: list[dict[str, str]] = []
+
+    # Shared characters = cast turnaround risk
+    chars_a = set(sa.get("characters") or [])
+    chars_b = set(sb.get("characters") or [])
+    shared = chars_a & chars_b
+    if shared:
+        conflicts.append({
+            "type": "shared_cast",
+            "severity": "high",
+            "detail": f"Shared characters: {', '.join(sorted(shared))}. Check turnaround if scheduled same day.",
+        })
+
+    # Day/night mismatch = lighting turnaround
+    dn_a = (sa.get("day_night") or "").lower()
+    dn_b = (sb.get("day_night") or "").lower()
+    if dn_a and dn_b and dn_a != dn_b:
+        conflicts.append({
+            "type": "day_night_change",
+            "severity": "medium",
+            "detail": f"Scene {scene_a} is {dn_a.upper()}, scene {scene_b} is {dn_b.upper()}. Lighting setup change required.",
+        })
+
+    # INT/EXT mismatch = potential company move
+    ie_a = (sa.get("int_ext") or "").lower()
+    ie_b = (sb.get("int_ext") or "").lower()
+    if ie_a and ie_b and ie_a != ie_b:
+        conflicts.append({
+            "type": "int_ext_change",
+            "severity": "low",
+            "detail": f"Scene {scene_a} is {ie_a.upper()}, scene {scene_b} is {ie_b.upper()}. May need company move.",
+        })
+
     return {
         "scene_a": scene_a,
         "scene_b": scene_b,
-        "conflicts": [],
-        "message": "Schedule data not loaded. Connect the shooting schedule.",
+        "conflict_count": len(conflicts),
+        "conflicts": conflicts,
+        "note": "No conflicts detected." if not conflicts else f"{len(conflicts)} potential conflict(s) found.",
     }
 
 

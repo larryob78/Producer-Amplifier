@@ -273,6 +273,57 @@ async def budget_update(
 
 
 # ================================================================
+# EXPORT
+# ================================================================
+
+
+@app.get("/api/export/csv")
+async def export_csv():
+    """Export current analysis as CSV download."""
+    if _current_analysis is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No analysis loaded. Run /api/script/analyze first."},
+        )
+
+    from sba.output.export_csv import export_scenes_csv_string
+
+    csv_text = export_scenes_csv_string(_current_analysis)
+    title = "breakdown"
+    if _current_script:
+        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
+
+    return StreamingResponse(
+        io.BytesIO(csv_text.encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{title}_breakdown.csv"'},
+    )
+
+
+@app.get("/api/export/html")
+async def export_html_endpoint():
+    """Export current analysis as standalone HTML production bible."""
+    if _current_analysis is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No analysis loaded. Run /api/script/analyze first."},
+        )
+
+    from sba.output.export_html import _build_html
+
+    html = _build_html(_current_analysis)
+    title = "breakdown"
+    if _current_script:
+        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
+
+    return StreamingResponse(
+        io.BytesIO(html.encode("utf-8")),
+        media_type="text/html",
+        headers={"Content-Disposition": f'attachment; filename="{title}_bible.html"'},
+    )
+
+
+# ================================================================
 # VOICE
 # ================================================================
 
