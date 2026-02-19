@@ -1,52 +1,33 @@
-"""Pydantic models defining the breakdown output schema.
-
-This is the single source of truth for the JSON structure.
-CSV export is derived from these models, not stored separately.
-"""
+"""Pydantic models — relaxed schema that accepts Claude output variations."""
 
 from __future__ import annotations
-
-from enum import Enum
-from typing import Optional
-
+from typing import Any, Optional
 from pydantic import BaseModel, Field, model_validator
 
+from enum import Enum
 
 class VfxCategory(str, Enum):
-    """Valid VFX category values. Include in system prompt for Claude."""
-
-    # Compositing and 2D
     COMP = "comp"
     ROTO = "roto"
     PAINT_CLEANUP = "paint_cleanup"
     WIRE_REMOVAL = "wire_removal"
-
-    # 3D / CG
     CG_CREATURE = "cg_creature"
     CG_VEHICLE = "cg_vehicle"
     CG_PROP = "cg_prop"
     CG_ENVIRONMENT = "cg_environment"
     DIGI_DOUBLE = "digi_double"
     FACE_REPLACEMENT = "face_replacement"
-
-    # Environment
     SET_EXTENSION = "set_extension"
     MATTE_PAINTING = "matte_painting"
     SKY_REPLACEMENT = "sky_replacement"
-
-    # FX Simulation
     FX_WATER = "fx_water"
     FX_FIRE = "fx_fire"
     FX_SMOKE_DUST = "fx_smoke_dust"
     FX_DESTRUCTION = "fx_destruction"
     FX_WEATHER = "fx_weather"
     FX_EXPLOSION = "fx_explosion"
-
-    # Camera / Tracking
     MATCHMOVE = "matchmove"
     CAMERA_PROJECTION = "camera_projection"
-
-    # Specialty
     CROWD_SIM = "crowd_sim"
     ZERO_G = "zero_g"
     SCREEN_INSERT = "screen_insert"
@@ -55,25 +36,30 @@ class VfxCategory(str, Enum):
     OTHER = "other"
 
 
+
 class VfxShotCountEstimate(BaseModel):
-    """Range estimate for VFX shots in a scene."""
+    min: int = 0
+    likely: int = 0
+    max: int = 0
 
-    min: int = Field(ge=0)
-    likely: int = Field(ge=0)
-    max: int = Field(ge=0)
-
-    @model_validator(mode="after")
-    def _check_ordering(self) -> VfxShotCountEstimate:
-        if self.min > self.likely:
-            raise ValueError(f"min ({self.min}) must be <= likely ({self.likely})")
-        if self.likely > self.max:
-            raise ValueError(f"likely ({self.likely}) must be <= max ({self.max})")
-        return self
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce(cls, v):
+        if isinstance(v, (int, float)):
+            n = int(v)
+            return {"min": n, "likely": n, "max": n}
+        if isinstance(v, str):
+            return {"min": 0, "likely": 0, "max": 0}
+        if isinstance(v, dict):
+            for k in ("min", "likely", "max"):
+                if k in v and not isinstance(v[k], int):
+                    try: v[k] = int(v[k])
+                    except: v[k] = 0
+        return v
 
 
 class ProductionFlags(BaseModel):
-    """Boolean flags for production elements that affect planning."""
-
+    model_config = dict(extra="allow")
     stunts: bool = False
     creatures: bool = False
     vehicles: bool = False
@@ -88,72 +74,85 @@ class ProductionFlags(BaseModel):
 
 
 class Scene(BaseModel):
-    """A single scene breakdown."""
-
-    scene_id: str
-    slugline: str
+    model_config = dict(extra="allow")
+    scene_id: str | int = ""
+    slugline: str = ""
     int_ext: str = "unspecified"
     day_night: str = "unspecified"
-    page_count_eighths: int = 0
+    page_count_eighths: int | float | str = 0
     location_type: str = "unspecified"
-    characters: list[str] = Field(default_factory=list)
+    characters: list[str] | str = Field(default_factory=list)
     scene_summary: str = ""
-    vfx_triggers: list[str] = Field(default_factory=list)
-    production_flags: ProductionFlags = Field(default_factory=ProductionFlags)
-    vfx_categories: list[VfxCategory] = Field(default_factory=list)
-    vfx_shot_count_estimate: VfxShotCountEstimate
-    invisible_vfx_likelihood: str
-    cost_risk_score: int = Field(ge=1, le=5)
-    schedule_risk_score: int = Field(ge=1, le=5)
-    risk_reasons: list[str] = Field(default_factory=list)
-    suggested_capture: list[str] = Field(default_factory=list)
-    notes_for_producer: list[str] = Field(default_factory=list)
-    uncertainties: list[str] = Field(default_factory=list)
+    vfx_triggers: list[str] | str = Field(default_factory=list)
+    production_flags: ProductionFlags | dict = Field(default_factory=ProductionFlags)
+    vfx_categories: list[str] = Field(default_factory=list)
+    vfx_shot_count_estimate: VfxShotCountEstimate | dict | int = Field(default_factory=lambda: VfxShotCountEstimate())
+    invisible_vfx_likelihood: str = "none"
+    cost_risk_score: int | float | str = 1
+    schedule_risk_score: int | float | str = 1
+    risk_reasons: list[str] | str = Field(default_factory=list)
+    suggested_capture: list[str] | str = Field(default_factory=list)
+    notes_for_producer: list[str] | str = ""
+    uncertainties: list[str] | str = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_fields(cls, v):
+        if not isinstance(v, dict):
+            return v
+        for f in ("cost_risk_score", "schedule_risk_score"):
+            if f in v:
+                try: v[f] = max(1, min(5, int(v[f])))
+                except: v[f] = 1
+        for f in ("characters", "vfx_triggers", "risk_reasons", "suggested_capture", "uncertainties"):
+            if f in v and isinstance(v[f], str):
+                v[f] = [v[f]] if v[f] else []
+        if "notes_for_producer" in v and isinstance(v["notes_for_producer"], list):
+            pass
+        if "page_count_eighths" in v:
+            try: v["page_count_eighths"] = int(float(str(v["page_count_eighths"])))
+            except: v["page_count_eighths"] = 0
+        return v
 
 
 class HiddenCostItem(BaseModel):
-    """A hidden cost multiplier flagged by the analysis."""
-
-    flag: str
-    severity: str
-    where: list[str] = Field(default_factory=list)
+    model_config = dict(extra="allow")
+    flag: str = ""
+    severity: str = "medium"
+    where: list[str] | str = Field(default_factory=list)
     why_it_matters: str = ""
-    mitigation_ideas: list[str] = Field(default_factory=list)
+    mitigation_ideas: list[str] | str = Field(default_factory=list)
 
 
 class ProjectSummary(BaseModel):
-    """Top-level project metadata."""
-
+    model_config = dict(extra="allow")
     project_title: str = ""
     date_analyzed: str = ""
     analysis_scope: str = "full_script"
-    script_pages_estimate: Optional[int] = None
+    script_pages_estimate: Optional[int | float] = None
     total_scene_count: int = 0
-    confidence_notes: list[str] = Field(default_factory=list)
+    confidence_notes: list[str] | str = Field(default_factory=list)
 
 
 class GlobalFlags(BaseModel):
-    """Project-wide assessment flags."""
-
+    model_config = dict(extra="allow")
     overall_vfx_heaviness: str = "low"
     likely_virtual_production_fit: str = "low"
     top_risk_themes: list[str] = Field(default_factory=list)
 
 
 class KeyQuestions(BaseModel):
-    """Questions generated for each department."""
-
-    for_producer: list[str] = Field(default_factory=list)
-    for_vfx_supervisor: list[str] = Field(default_factory=list)
-    for_dp_camera: list[str] = Field(default_factory=list)
-    for_locations_art_dept: list[str] = Field(default_factory=list)
+    model_config = dict(extra="allow")
+    for_producer: list[str] | str = Field(default_factory=list)
+    for_vfx_supervisor: list[str] | str = Field(default_factory=list)
+    for_dp_camera: list[str] | str = Field(default_factory=list)
+    for_locations_art_dept: list[str] | str = Field(default_factory=list)
 
 
 class BreakdownOutput(BaseModel):
-    """Root model for the complete breakdown output."""
-
-    project_summary: ProjectSummary
-    global_flags: GlobalFlags
-    scenes: list[Scene]
+    model_config = dict(extra="allow")
+    project_summary: ProjectSummary = Field(default_factory=ProjectSummary)
+    global_flags: GlobalFlags = Field(default_factory=GlobalFlags)
+    scenes: list[Scene] = Field(default_factory=list)
     hidden_cost_radar: list[HiddenCostItem] = Field(default_factory=list)
     key_questions_for_team: KeyQuestions = Field(default_factory=KeyQuestions)

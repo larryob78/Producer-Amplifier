@@ -80,6 +80,6 @@ def route_query(query: str) -> RouteDecision:
         model=CLAUDE_MODEL_SONNET,
         use_thinking=True,
         max_tokens=8192,
-        temperature=0.3,
+        temperature=1.0,
         reason="Reasoning task — using Sonnet with extended thinking",
     )

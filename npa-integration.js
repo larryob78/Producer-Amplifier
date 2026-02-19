@@ -37,7 +37,7 @@
   .model-badge { font-family:var(--mono,monospace); font-size:9px; padding:2px 8px; border-radius:3px; background:rgba(201,168,76,0.15); color:var(--accent,#c9a84c); }
   .chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
   .chat-msg { max-width:85%; padding:10px 14px; border-radius:10px; font-size:13px; line-height:1.5; font-family:var(--body,'Inter',sans-serif); }
-  .chat-msg.user { align-self:flex-end; background:rgba(201,168,76,0.15); color:var(--text-1,#eee); border-bottom-right-radius:2px; }
+  .chat-msg.user { align-self:flex-end; background:rgba(201,168,76,0.25); color:#fff; border-bottom-right-radius:2px; border:1px solid rgba(201,168,76,0.3); }
   .chat-msg.assistant { align-self:flex-start; background:var(--surface-raised,#1a1918); color:var(--text-2,#bbb); border-bottom-left-radius:2px; }
   .chat-msg.thinking { align-self:flex-start; background:transparent; color:var(--text-3,#777); font-style:italic; font-size:11px; border-left:2px solid rgba(201,168,76,0.3); padding-left:10px; }
   .chat-input-area { padding:10px 12px; border-top:1px solid var(--border,#2a2826); display:flex; gap:8px; align-items:center; }
@@ -62,10 +62,10 @@
   <div class="budget-item"><span class="budget-label">Variance</span><span class="budget-value" id="budgetVariance">--</span></div>
   <div class="budget-status"><div class="budget-dot disconnected" id="budgetDot"></div><span class="budget-label" id="budgetStatusText">Budget: Checking...</span></div>
   </div>
-  <button class="chat-toggle" id="chatToggle" title="Producer Copilot">
+  <button class="chat-toggle" id="npa-chatToggle" title="Producer Copilot">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
   </button>
-  <div class="chat-panel" id="chatPanel">
+  <div class="chat-panel" id="npa-chatPanel">
   <div class="chat-header">
   <h3>Producer Copilot</h3>
   <div style="display:flex;align-items:center;gap:8px">
@@ -92,8 +92,9 @@
  // CHAT
  // ================================================================
  function toggleChat() {
-  var panel = document.getElementById('chatPanel');
-  var toggle = document.getElementById('chatToggle');
+  var panel = document.getElementById('npa-chatPanel');
+  var toggle = document.getElementById('npa-chatToggle');
+  if (!panel || !toggle) return;
   panel.classList.toggle('open');
   toggle.style.display = panel.classList.contains('open') ? 'none' : 'flex';
  }
@@ -131,8 +132,8 @@
    }
    addMsg(data.reply || data.error || 'No response', 'assistant');
   })
-  .catch(function() {
-   addMsg('Backend not running. Start with: uvicorn sba.app:app --reload', 'assistant');
+  .catch(function(err) {
+   addMsg('Connection error: ' + (err.message || 'Check server is running'), 'assistant');
   });
  }
 
@@ -204,13 +205,21 @@
   injectStyles();
   injectHTML();
 
-  document.getElementById('chatToggle').addEventListener('click', toggleChat);
+  document.getElementById('npa-chatToggle').addEventListener('click', toggleChat);
   document.getElementById('chatClose').addEventListener('click', toggleChat);
   document.getElementById('chatSendBtn').addEventListener('click', sendChat);
   document.getElementById('chatInput').addEventListener('keydown', function(e) {
    if (e.key === 'Enter') sendChat();
   });
   document.getElementById('voiceBtn').addEventListener('click', toggleVoice);
+
+  // If the main page already has an AI Assistant button, wire it to our chat and hide our toggle
+  var mainAiBtn = document.querySelector('[onclick*="toggleChat"], .ai-assistant-btn, #aiAssistantBtn');
+  if (mainAiBtn) {
+   mainAiBtn.onclick = function(e) { e.preventDefault(); toggleChat(); };
+   var npaToggle = document.getElementById('npa-chatToggle');
+   if (npaToggle) npaToggle.style.display = 'none';
+  }
 
   // Check backend
   fetch(API_BASE + '/api/health')

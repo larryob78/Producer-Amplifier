@@ -1,0 +1,125 @@
+{
+  "project_summary": {
+    "project_title": "GRAVITY",
+    "date_analyzed": "2025-01-23T00:00:00Z",
+    "analysis_scope": "excerpt",
+    "script_pages_estimate": 1,
+    "total_scene_count": 0,
+    "confidence_notes": [
+      "No individual scene breakdowns were provided, so this assessment is based solely on the project title and minimal metadata.",
+      "A script titled 'GRAVITY' strongly suggests a space-set or zero-gravity narrative, which historically demands extreme VFX work (cf. Cuar\u00f3n's 2013 film).",
+      "With only ~1 page estimated and zero parsed scenes, confidence in any cost or complexity projection is extremely low.",
+      "A full script breakdown is essential before any budgeting or scheduling decisions are made."
+    ]
+  },
+  "global_flags": {
+    "overall_vfx_heaviness": "extreme",
+    "likely_virtual_production_fit": "high",
+    "top_risk_themes": [
+      "Full CG environment creation for space/orbital settings",
+      "Sustained zero-gravity simulation requiring wire rigs, CG body replacement, or LED volume",
+      "Long-take or continuous-shot aesthetic that compounds compositing complexity",
+      "Photoreal Earth, spacecraft, and debris rendering",
+      "Interactive lighting from Earth-glow, sun, and spacecraft instruments on actors"
+    ]
+  },
+  "scenes": [],
+  "hidden_cost_radar": [
+    {
+      "flag": "Zero-gravity performance capture and wire removal",
+      "severity": "critical",
+      "where": [],
+      "why_it_matters": "Every scene set in space will require either wire rigs with extensive paint-out or full digital double work. This is a per-shot cost that scales with the entire film's runtime.",
+      "mitigation_ideas": [
+        "Evaluate LED volume / virtual production stages early to reduce compositing passes",
+        "Consider robotic camera rigs (e.g., Bot & Dolly style) to move the camera around a stationary actor, reducing wire work",
+        "Budget for a dedicated wire-removal team embedded in the post pipeline from day one"
+      ]
+    },
+    {
+      "flag": "Photoreal CG Earth and orbital environments",
+      "severity": "critical",
+      "where": [],
+      "why_it_matters": "Earth as a backdrop must hold up in every frame at feature-film resolution. Any shortfall in fidelity will break immersion instantly given audience familiarity with the real thing.",
+      "mitigation_ideas": [
+        "License high-resolution satellite imagery and NASA assets early",
+        "Develop a modular Earth asset pipeline that supports day/night terminator, weather systems, and atmospheric scattering",
+        "Use procedural cloud and atmosphere systems to avoid repetitive looks across scenes"
+      ]
+    },
+    {
+      "flag": "Debris and destruction simulations",
+      "severity": "high",
+      "where": [],
+      "why_it_matters": "Space debris fields involve massive particle counts, rigid-body dynamics, and secondary fragmentation that are computationally expensive and art-direction intensive.",
+      "mitigation_ideas": [
+        "Pre-visualize debris sequences thoroughly to lock editorial before committing to final simulations",
+        "Layer hero debris (hand-animated or art-directed) over procedural background fields to control costs",
+        "Establish render-farm capacity and turnaround benchmarks early in pre-production"
+      ]
+    },
+    {
+      "flag": "Interactive and dynamic lighting on actors",
+      "severity": "high",
+      "where": [],
+      "why_it_matters": "Actors in space suits must be lit by rotating Earth-glow, direct sunlight, and instrument panels. Mismatched lighting between plate and CG environment is the most common tell in space films.",
+      "mitigation_ideas": [
+        "Use programmable LED light rigs synced to previs environment rotation",
+        "Shoot HDRI references for every setup to feed into compositing",
+        "Consider in-camera LED volume for medium shots to capture real interactive light"
+      ]
+    },
+    {
+      "flag": "Spacesuit and helmet visor compositing",
+      "severity": "medium",
+      "where": [],
+      "why_it_matters": "Helmet visors produce reflections, refractions, fogging, and breath condensation that must all be tracked and composited per shot. This is a hidden per-shot multiplier across the entire film.",
+      "mitigation_ideas": [
+        "Design helmets with removable visors for close-ups; add CG visors in post",
+        "Standardize a visor compositing template early to streamline the pipeline",
+        "Capture clean-plate and polarized reference for every helmet shot"
+      ]
+    },
+    {
+      "flag": "No scene data available \u2014 planning risk",
+      "severity": "critical",
+      "where": [],
+      "why_it_matters": "Without a parsed script, there is no basis for shot counts, complexity tiers, or vendor scoping. Any budget or schedule built now is speculative.",
+      "mitigation_ideas": [
+        "Prioritize a full script breakdown with scene-by-scene VFX tagging immediately",
+        "Engage a VFX supervisor for a read-through and page-turn before greenlight",
+        "Produce a rough previs or storyboard pass to establish baseline shot count"
+      ]
+    }
+  ],
+  "key_questions_for_team": {
+    "for_producer": [
+      "Is the full shooting script available for a complete VFX breakdown? The current data covers ~1 page with zero parsed scenes.",
+      "What is the target VFX budget range, and does it account for a potentially 80-100% VFX-shot film?",
+      "Has a VFX vendor or internal team been identified, and what is their capacity for sustained CG-heavy production?",
+      "Is virtual production (LED volume) being considered, and what stage availability exists in the target shoot window?",
+      "What is the release timeline, and does it allow for the 12-18 month post-production window a space film typically requires?"
+    ],
+    "for_vfx_supervisor": [
+      "What is the planned approach for zero-gravity simulation \u2014 wire rigs, robotic rigs, digital doubles, or a hybrid?",
+      "How many hero spacecraft and environment assets are anticipated, and what is the LOD strategy?",
+      "What is the debris/destruction methodology \u2014 full simulation, layered procedural, or pre-built library?",
+      "Are there long-take or oner sequences planned that will require seamless multi-pass compositing?",
+      "What is the strategy for helmet visor reflections and interactive Earth-light on actors?"
+    ],
+    "for_dp_camera": [
+      "What camera and lens package supports the lighting control needed for space environments (e.g., compatibility with LED volumes)?",
+      "How will Earth-glow and sunlight transitions be handled on set \u2014 programmable rigs, post-only, or hybrid?",
+      "Are there planned continuous-shot sequences, and what motion-control or robotic rig support is needed?",
+      "What frame rate and resolution targets affect render and compositing budgets?",
+      "How will reference photography (HDRIs, chrome/grey balls, Macbeth charts) be standardized across setups?"
+    ],
+    "for_locations_art_dept": [
+      "What practical spacecraft interior sets are planned, and to what extent will they be extended digitally?",
+      "Are spacesuit designs finalized, and have they been reviewed for VFX-friendly visor and joint construction?",
+      "What stage size is required for wire rigs and/or LED volume work?",
+      "Is there a plan for partial practical debris elements (air cannons, physical fragments) to complement CG?",
+      "How will set pieces interface with motion-control rigs or rotating gimbal platforms for zero-G simulation?"
+    ]
+  }
+}

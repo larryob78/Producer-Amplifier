@@ -1,0 +1,54 @@
+{
+  "project_summary": {
+    "project_title": "vfx-previz-claude-code-plan",
+    "date_analyzed": "2025-01-24T00:00:00Z",
+    "analysis_scope": "excerpt",
+    "script_pages_estimate": 1,
+    "total_scene_count": 0,
+    "confidence_notes": [
+      "No scene breakdowns were provided \u2014 the script may contain no identifiable scenes, or the input may be a planning document, treatment, or non-narrative text rather than a screenplay.",
+      "With zero scenes analyzed, all global assessments are speculative placeholders and should not be used for budgeting or scheduling decisions.",
+      "A re-analysis is strongly recommended once a full or partial screenplay is available."
+    ]
+  },
+  "global_flags": {
+    "overall_vfx_heaviness": "low",
+    "likely_virtual_production_fit": "low",
+    "top_risk_themes": [
+      "Insufficient script material to assess VFX scope \u2014 risk of underestimating needs if production proceeds without a proper VFX breakdown",
+      "Potential for scope creep if creative development occurs without early VFX supervision input"
+    ]
+  },
+  "scenes": [],
+  "hidden_cost_radar": [
+    {
+      "flag": "No screenplay content available for VFX analysis",
+      "severity": "critical",
+      "where": [],
+      "why_it_matters": "Without identifiable scenes, no VFX shots, techniques, or complexity levels can be estimated. Budgeting, vendor selection, and scheduling cannot begin meaningfully. If this document is a pre-production plan rather than a script, the actual screenplay may contain significant undiscovered VFX requirements.",
+      "mitigation_ideas": [
+        "Obtain the full shooting script and re-run the VFX breakdown analysis",
+        "Engage a VFX supervisor early in development to flag potential costs during the writing phase",
+        "If the project is still in treatment/outline stage, create a VFX wish-list document to parallel creative development"
+      ]
+    }
+  ],
+  "key_questions_for_team": {
+    "for_producer": [
+      "Is this document a screenplay or a planning/development document? If the latter, when is the shooting script expected?",
+      "Has any VFX budget been allocated or discussed at this stage?",
+      "Are there any known set-pieces, fantastical elements, or period/futuristic settings anticipated that would drive VFX costs?"
+    ],
+    "for_vfx_supervisor": [
+      "Has there been any verbal or conceptual discussion of VFX-heavy sequences that aren't yet reflected in script form?",
+      "What is the earliest point at which you can review the screenplay for a proper VFX breakdown?"
+    ],
+    "for_dp_camera": [
+      "Are there any known shooting format or camera decisions that would affect downstream VFX pipeline (e.g., resolution, anamorphic, IMAX, frame rate)?"
+    ],
+    "for_locations_art_dept": [
+      "Are any locations or sets under consideration that would require digital extension, augmentation, or full CG environment replacement?",
+      "Is there early concept art or mood boards that hint at VFX-dependent world-building?"
+    ]
+  }
+}

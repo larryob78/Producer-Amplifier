@@ -22,7 +22,7 @@ def call_claude(
     client: anthropic.Anthropic | None = None,
     model: str = CLAUDE_MODEL,
     max_tokens: int | None = None,
-    temperature: float = 0.2,
+    temperature: float = 1.0,
 ) -> str:
     """Make a single Claude API call and return the text response.
 

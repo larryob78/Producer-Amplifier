@@ -166,6 +166,22 @@ def get_budget_summary() -> dict[str, Any]:
                     }
                 )
 
+    # Fallback: sum sections if GRAND TOTAL row not found
+    if grand_budget == 0 and sections:
+        grand_budget = sum(float(s.get("budget", 0) or 0) for s in sections.values())
+        grand_actual = sum(float(s.get("actual", 0) or 0) for s in sections.values())
+
+    # Fallback: sum all account rows when GRAND TOTAL not found
+    if grand_budget == 0:
+        for row in range(1, ws.max_row + 1):
+            code = ws.cell(row=row, column=1).value
+            if code and str(code).strip() in ACCOUNT_NAMES:
+                try:
+                    grand_budget += float(ws.cell(row=row, column=3).value or 0)
+                    grand_actual += float(ws.cell(row=row, column=4).value or 0)
+                except (ValueError, TypeError):
+                    pass
+
     return {
         "total_budget": grand_budget,
         "total_actual": grand_actual,

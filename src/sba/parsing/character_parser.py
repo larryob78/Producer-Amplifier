@@ -63,7 +63,7 @@ def extract_characters_from_text(text: str) -> dict[str, Character]:
         if not canonical or len(canonical) < 2:
             continue
 
-        # Skip common false positives
+        # Skip common false positives (transitions, directions, scene headings)
         if canonical in {
             "CUT TO",
             "FADE TO",
@@ -82,7 +82,7 @@ def extract_characters_from_text(text: str) -> dict[str, Character]:
             "SUPER",
             "TITLE CARD",
             "CHYRON",
-        }:
+        } or canonical.startswith(("INT.", "INT ", "EXT.", "EXT ", "I/E.", "I/E ")):
             continue
 
         if canonical not in characters:

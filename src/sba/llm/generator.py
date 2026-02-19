@@ -1,405 +1,240 @@
-"""Orchestrates the full analysis pipeline: parse → retrieve → prompt → call → validate."""
+"""NPA Parallel Analysis v2.1 — chunk-based, no regex splitting."""
 
 from __future__ import annotations
-
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-from sba.config import CLAUDE_MODEL
-from sba.llm.claude_client import call_claude, get_anthropic_client
-from sba.llm.prompts import (
-    SCENE_SYSTEM_PROMPT,
-    SYNTHESIS_SYSTEM_PROMPT,
-    SYSTEM_PROMPT,
-    build_parsing_summary,
-    build_scene_user_prompt,
-    build_synthesis_user_prompt,
-    build_user_prompt,
+import json, os, re, time, logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+import anthropic
+from sba.output.schema import (
+    BreakdownOutput, Scene, ProjectSummary, GlobalFlags,
+    KeyQuestions, HiddenCostItem, VfxCategory,
 )
-from sba.output.validate import validate_breakdown_json
-from sba.parsing.pipeline import parse_script_file, parse_script_text
-from sba.rag.corpus_builder import load_corpus_as_text
 
-if TYPE_CHECKING:
-    from sba.output.schema import BreakdownOutput
-    from sba.parsing.models import ParsedScript
+logger = logging.getLogger(__name__)
+API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+HAIKU_MODEL = "claude-haiku-4-5-20251001"
+MAX_WORKERS = 6
+CHUNK_SIZE = 15000
+MAX_RETRIES = 2
+_client = None
 
+def _get_client():
+    global _client
+    if _client is None:
+        key = API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
+        if not key:
+            raise RuntimeError("ANTHROPIC_API_KEY not set")
+        _client = anthropic.Anthropic(api_key=key)
+    return _client
 
-def analyze_script(
-    file_path: str | Path | None = None,
-    text: str | None = None,
-    title: str = "Untitled",
-    use_rag: bool = False,
-    max_retries: int = 1,
-    model: str | None = None,
-) -> BreakdownOutput:
-    """Run the full script breakdown analysis pipeline.
+VFX_CATEGORIES_LIST = ", ".join([c.value for c in VfxCategory])
 
-    Args:
-        file_path: Path to a screenplay file (PDF or text).
-        text: Raw screenplay text (alternative to file_path).
-        title: Project title.
-        use_rag: If True, use full RAG retrieval. If False, use RAG-lite (static injection).
-        max_retries: Number of retries on validation failure.
-        model: Override the Claude model identifier.
+ANALYSIS_SYSTEM_PROMPT = f"""You are a VFX Pre-Viz Supervisor analyzing a screenplay excerpt.
 
-    Returns:
-        Validated BreakdownOutput Pydantic model.
+Find ALL scenes in the text. A new scene starts at each scene heading (INT., EXT., INT./EXT., etc).
 
-    Raises:
-        ValueError: If neither file_path nor text is provided.
-        RuntimeError: If validation fails after all retries.
-    """
-    if file_path is None and text is None:
-        raise ValueError("Either file_path or text must be provided.")
+For EACH scene found, produce a JSON object with these fields:
+- scene_id: string (sequential number)
+- slugline: string (the full scene heading line)
+- int_ext: "INT" or "EXT" or "INT_EXT"
+- day_night: "DAY" or "NIGHT" or "DAWN" or "DUSK" or "UNSPECIFIED"
+- scene_summary: string (1-2 sentences)
+- characters: [character names]
+- vfx_triggers: [specific VFX needs in plain language]
+- vfx_categories: [from: {VFX_CATEGORIES_LIST}]
+- production_flags: {{stunts: bool, creatures: bool, vehicles: bool, crowds: bool, water: bool, fire_smoke: bool, destruction: bool, weather: bool, complex_lighting: bool, space_or_zero_g: bool, heavy_costume_makeup: bool}}
+- vfx_shot_count_estimate: {{min: int, likely: int, max: int}}
+- cost_risk_score: integer 1-5 (1=cheap dialogue, 5=massive VFX)
+- schedule_risk_score: integer 1-5
+- risk_reasons: [strings]
+- suggested_capture: [on-set recommendations]
+- notes_for_producer: [producer notes]
+- uncertainties: [things needing clarification]
 
-    model = model or CLAUDE_MODEL
+RULES:
+- Return ONLY a JSON array. No markdown, no explanation, no code fences.
+- Find EVERY scene in the text, even short ones.
+- If no VFX needed, set cost_risk_score=1, vfx_categories=[].
+- Include invisible VFX: wire removal, sky replacement, set extension, cleanup."""
 
-    # Step 1: Parse the script
-    if file_path:
-        parsed = parse_script_file(Path(file_path), title=title)
-        script_text = parsed.raw_text
-    else:
-        parsed = parse_script_text(text, title=title)
-        script_text = text
+GLOBAL_SYSTEM_PROMPT = """You are a VFX Pre-Viz Supervisor creating a project summary.
+Given scene analysis data, produce a JSON object with:
+- global_flags: {{overall_vfx_heaviness: "low"|"medium"|"high"|"extreme", likely_virtual_production_fit: "low"|"medium"|"high", top_risk_themes: [strings]}}
+- hidden_cost_radar: [{{flag: string, severity: "low"|"medium"|"high", where: [scene IDs], why_it_matters: string, mitigation_ideas: [strings]}}]
+- key_questions_for_team: {{for_producer: [strings], for_vfx_supervisor: [strings], for_dp_camera: [strings], for_locations_art_dept: [strings]}}
+Return ONLY valid JSON. No markdown."""
 
-    # Calculate dynamic max_tokens based on scene count
-    scene_count = len(parsed.scenes)
-    dynamic_tokens = min(max(4096, scene_count * 800 + 2000), 32768)
+def _call_claude(model, system, user_msg, max_tokens=8192):
+    client = _get_client()
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            resp = client.messages.create(
+                model=model, max_tokens=max_tokens,
+                system=system,
+                messages=[{"role": "user", "content": user_msg}],
+            )
+            return resp.content[0].text
+        except Exception as e:
+            logger.warning(f"API attempt {attempt+1} failed: {e}")
+            if attempt == MAX_RETRIES:
+                raise
+            time.sleep(2 ** attempt)
+    return ""
 
-    # Step 2: Get corpus context
-    if use_rag:
-        corpus_context = _retrieve_rag_context(parsed)
-    else:
-        corpus_context = load_corpus_as_text()
-
-    # Step 3: Build prompts
-    parsing_summary = build_parsing_summary(parsed)
-    user_prompt = build_user_prompt(
-        script_text=script_text,
-        title=title,
-        corpus_context=corpus_context,
-        parsing_summary=parsing_summary,
-    )
-
-    # Step 4: Call Claude
-    client = get_anthropic_client()
-    raw_json = call_claude(
-        system_prompt=SYSTEM_PROMPT,
-        user_prompt=user_prompt,
-        client=client,
-        model=model,
-        max_tokens=dynamic_tokens,
-    )
-
-    # Step 5: Validate
-    result = validate_breakdown_json(raw_json)
-    if result.is_valid:
-        return result.output
-
-    # Step 6: Retry with error feedback
-    for attempt in range(max_retries):
-        error_feedback = (
-            f"Your previous response had validation errors:\n{result.error_message}\n\n"
-            "Please fix these errors and output valid JSON. Remember: output ONLY the JSON "
-            "object with no surrounding text or markdown fences."
-        )
-        retry_prompt = f"{user_prompt}\n\n## IMPORTANT CORRECTION\n{error_feedback}"
-
-        raw_json = call_claude(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt=retry_prompt,
-            client=client,
-            model=model,
-            max_tokens=dynamic_tokens,
-        )
-
-        result = validate_breakdown_json(raw_json)
-        if result.is_valid:
-            return result.output
-
-    raise RuntimeError(
-        f"Failed to get valid breakdown after {max_retries + 1} attempts. "
-        f"Last error: {result.error_message}"
-    )
-
-
-def _retrieve_rag_context(parsed: ParsedScript) -> str:
-    """Use the full RAG pipeline to retrieve relevant context.
-
-    Retrieves based on detected VFX trigger categories from parsing.
-    Falls back to static corpus on any error.
-    """
-    import logging
-
-    logger = logging.getLogger(__name__)
-
+def _parse_json_response(text):
+    text = text.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*\n?", "", text)
+        text = re.sub(r"\n?```\s*$", "", text)
+        text = text.strip()
     try:
-        from sba.rag.corpus_builder import build_corpus
-        from sba.rag.embedder import get_voyage_client
-        from sba.rag.retriever import HybridRetriever
-        from sba.rag.vector_store import get_or_create_collection
+        return json.loads(text)
+    except json.JSONDecodeError:
+        for pat in [r"\[[\s\S]*\]", r"\{[\s\S]*\}"]:
+            m = re.search(pat, text)
+            if m:
+                try:
+                    return json.loads(m.group())
+                except json.JSONDecodeError:
+                    continue
+        logger.error(f"JSON parse failed: {text[:300]}")
+        return []
 
-        # Collect unique VFX categories from all scenes
-        vfx_categories: set[str] = set()
-        for scene in parsed.scenes:
-            for trigger in scene.vfx_triggers:
-                vfx_categories.add(trigger.category)
+def _chunk_text(text, chunk_size=CHUNK_SIZE):
+    """Split text into overlapping chunks, breaking at paragraph boundaries."""
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        if end < len(text):
+            # Try to break at a double newline near the boundary
+            break_point = text.rfind("\n\n", start + chunk_size - 2000, end + 500)
+            if break_point > start:
+                end = break_point
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        start = end
+    return chunks
 
-        if not vfx_categories:
-            # Fall back to full corpus if no triggers detected
-            return load_corpus_as_text()
-
-        # Build retriever
-        chunks = build_corpus()
-        collection = get_or_create_collection()
-
-        # Check for empty collection
-        if collection.count() == 0:
-            logger.warning(
-                "ChromaDB collection is empty. Run 'sba index-corpus' first. "
-                "Falling back to static corpus."
-            )
-            return load_corpus_as_text()
-
-        voyage_client = get_voyage_client()
-        retriever = HybridRetriever(
-            chunks=chunks,
-            collection=collection,
-            voyage_client=voyage_client,
-        )
-
-        # Retrieve for detected categories
-        results = retriever.retrieve_for_categories(list(vfx_categories))
-
-        if not results:
-            logger.warning("RAG retrieval returned no results. Falling back to static corpus.")
-            return load_corpus_as_text()
-
-        # Format as context text
-        parts = []
-        for chunk in results:
-            parts.append(f"[{chunk.source_file} > {chunk.section_title}]\n{chunk.text}")
-
-        return "\n\n---\n\n".join(parts)
-
-    except Exception as e:
-        logger.warning("RAG retrieval failed: %s. Falling back to static corpus.", e)
-        return load_corpus_as_text()
-
-
-def analyze_script_staged(
-    file_path: str | Path | None = None,
-    text: str | None = None,
-    title: str = "Untitled",
-    use_rag: bool = False,
-    model: str | None = None,
-    batch_size: int = 5,
-    max_scenes: int | None = None,
-    use_cache: bool = True,
-    progress_callback: callable | None = None,
-) -> BreakdownOutput:
-    """Run staged per-scene analysis with a synthesis pass.
-
-    Architecture:
-        1. Parse all scenes
-        2. For each batch of N scenes: call Claude → validate per-scene results
-        3. Synthesis call: produce project_summary, global_flags, hidden_cost_radar, questions
-        4. Assemble final BreakdownOutput
-
-    Args:
-        file_path: Path to a screenplay file.
-        text: Raw screenplay text.
-        title: Project title.
-        use_rag: Use full RAG retrieval.
-        model: Override Claude model.
-        batch_size: Number of scenes per Claude call.
-        max_scenes: Analyze only the first N scenes (for quick sampling).
-        use_cache: Check/write file-based cache.
-        progress_callback: Optional callable(step, total, message) for progress updates.
-
-    Returns:
-        Validated BreakdownOutput Pydantic model.
-    """
-    import json
-    from datetime import datetime, timezone
-
-    from sba.output.schema import BreakdownOutput, Scene
-
-    if file_path is None and text is None:
-        raise ValueError("Either file_path or text must be provided.")
-
-    model = model or CLAUDE_MODEL
-
-    # Step 1: Parse
-    if file_path:
-        parsed = parse_script_file(Path(file_path), title=title)
-        script_text = parsed.raw_text
-    else:
-        parsed = parse_script_text(text, title=title)
-        script_text = text
-
-    # Check cache
-    if use_cache:
-        from sba.cache import get_cached, set_cached
-
-        cached = get_cached(script_text, model)
-        if cached is not None:
-            if progress_callback:
-                progress_callback(1, 1, "Loaded from cache")
-            return BreakdownOutput.model_validate(cached)
-
-    # Limit scenes if requested
-    scenes_to_analyze = parsed.scenes
-    if max_scenes and max_scenes < len(scenes_to_analyze):
-        scenes_to_analyze = scenes_to_analyze[:max_scenes]
-
-    total_scenes = len(scenes_to_analyze)
-
-    # Get corpus context (shared across all batches)
-    if use_rag:
-        corpus_context = _retrieve_rag_context(parsed)
-    else:
-        corpus_context = load_corpus_as_text()
-
-    # Step 2: Per-scene/batch analysis
-    client = get_anthropic_client()
-    all_scene_results: list[Scene] = []
-    batches = [scenes_to_analyze[i : i + batch_size] for i in range(0, total_scenes, batch_size)]
-
-    for batch_idx, batch in enumerate(batches):
-        if progress_callback:
-            progress_callback(
-                batch_idx + 1,
-                len(batches) + 1,  # +1 for synthesis
-                f"Analyzing scenes {batch[0].scene_number}-{batch[-1].scene_number}",
-            )
-
-        scene_texts = [s.raw_text for s in batch]
-
-        # Build metadata for this batch
-        metadata_lines = []
-        for s in batch:
-            line = f"Scene {s.scene_number}: {s.slugline}"
-            if s.characters:
-                line += f" | Characters: {', '.join(sorted(s.characters))}"
-            if s.vfx_triggers:
-                cats = {t.category for t in s.vfx_triggers}
-                line += f" | VFX triggers: {', '.join(sorted(cats))}"
-            metadata_lines.append(line)
-
-        user_prompt = build_scene_user_prompt(
-            scene_texts=scene_texts,
-            corpus_context=corpus_context,
-            scene_metadata="\n".join(metadata_lines),
-        )
-
-        # Call Claude for this batch
-        batch_tokens = min(max(4096, len(batch) * 1600), 16384)
-        raw_json = call_claude(
-            system_prompt=SCENE_SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            client=client,
-            model=model,
-            max_tokens=batch_tokens,
-        )
-
-        # Validate batch result
-        result = validate_breakdown_json(raw_json)
-        if result.is_valid and result.output:
-            all_scene_results.extend(result.output.scenes)
-        else:
-            # Retry once for failed batch
-            raw_json = call_claude(
-                system_prompt=SCENE_SYSTEM_PROMPT,
-                user_prompt=user_prompt
-                + "\n\n## CORRECTION\nOutput ONLY valid JSON with a scenes array.",
-                client=client,
-                model=model,
-                max_tokens=batch_tokens,
-            )
-            result = validate_breakdown_json(raw_json)
-            if result.is_valid and result.output:
-                all_scene_results.extend(result.output.scenes)
-            else:
-                raise RuntimeError(f"Batch {batch_idx + 1} failed: {result.error_message}")
-
-    # Step 3: Synthesis
-    if progress_callback:
-        progress_callback(
-            len(batches) + 1,
-            len(batches) + 1,
-            "Synthesizing project summary",
-        )
-
-    scenes_json = json.dumps([s.model_dump(mode="json") for s in all_scene_results], indent=2)
-    synthesis_prompt = build_synthesis_user_prompt(
-        scene_results_json=scenes_json,
-        title=title,
-        total_scenes=total_scenes,
-        pages_estimate=parsed.total_pages_estimate,
+def _analyze_chunk(chunk_text, chunk_num, total_chunks):
+    logger.info(f"  -> Chunk {chunk_num}/{total_chunks}: {len(chunk_text)} chars")
+    t0 = time.time()
+    user_msg = (
+        f"This is chunk {chunk_num} of {total_chunks} from a screenplay. "
+        f"Find and analyze ALL scenes in this text:\n\n{chunk_text}"
     )
+    raw = _call_claude(HAIKU_MODEL, ANALYSIS_SYSTEM_PROMPT, user_msg, max_tokens=16000)
+    parsed = _parse_json_response(raw)
+    elapsed = time.time() - t0
+    count = len(parsed) if isinstance(parsed, list) else 1
+    logger.info(f"  OK Chunk {chunk_num}: found {count} scenes in {elapsed:.1f}s")
+    if isinstance(parsed, list):
+        return parsed
+    elif isinstance(parsed, dict) and "scenes" in parsed:
+        return parsed["scenes"]
+    elif isinstance(parsed, dict):
+        return [parsed]
+    return []
 
-    synthesis_raw = call_claude(
-        system_prompt=SYNTHESIS_SYSTEM_PROMPT,
-        user_prompt=synthesis_prompt,
-        client=client,
-        model=model,
-        max_tokens=8192,
+def _generate_global_summary(scenes, title):
+    logger.info("  -> Global summary...")
+    t0 = time.time()
+    summaries = []
+    for s in scenes:
+        summaries.append({
+            "scene_id": s.scene_id, "slugline": s.slugline,
+            "cost_risk_score": s.cost_risk_score,
+            "vfx_categories": s.vfx_categories,
+            "vfx_triggers": s.vfx_triggers[:3],
+        })
+    user_msg = f"Project: {title}\nScenes: {len(scenes)}\n\n{json.dumps(summaries, indent=1)}"
+    raw = _call_claude(HAIKU_MODEL, GLOBAL_SYSTEM_PROMPT, user_msg, max_tokens=4096)
+    parsed = _parse_json_response(raw)
+    logger.info(f"  OK Global summary in {time.time()-t0:.1f}s")
+    return parsed if isinstance(parsed, dict) else {}
+
+def analyze_script_staged(text, title="Untitled"):
+    total_start = time.time()
+    logger.info(f"=== NPA v2.1 Parallel Analysis: '{title}' ===")
+    logger.info(f"  Text length: {len(text)} chars")
+
+    # Chunk the text instead of regex splitting
+    chunks = _chunk_text(text)
+    logger.info(f"  Split into {len(chunks)} chunks of ~{CHUNK_SIZE} chars")
+
+    # Fire all chunks in parallel
+    all_scene_dicts = []
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        futures = {
+            pool.submit(_analyze_chunk, chunk, i+1, len(chunks)): i
+            for i, chunk in enumerate(chunks)
+        }
+        for future in as_completed(futures):
+            idx = futures[future]
+            try:
+                results = future.result()
+                all_scene_dicts.extend(results)
+            except Exception as e:
+                logger.error(f"  FAIL Chunk {idx+1}: {e}")
+
+    # Renumber scenes sequentially and deduplicate
+    seen_slugs = set()
+    unique_scenes = []
+    for sd in all_scene_dicts:
+        slug = str(sd.get("slugline", "")).strip().upper()
+        summary = str(sd.get("scene_summary", "")).strip()[:50]
+        key = f"{slug}|{summary}"
+        if key not in seen_slugs:
+            seen_slugs.add(key)
+            unique_scenes.append(sd)
+
+    # Convert to Scene models with sequential IDs
+    scenes = []
+    for i, sd in enumerate(unique_scenes):
+        sd["scene_id"] = str(i + 1)
+        try:
+            scenes.append(Scene(**sd))
+        except Exception as e:
+            logger.warning(f"  Scene parse error: {e}")
+            try:
+                scenes.append(Scene(
+                    scene_id=str(i+1),
+                    slugline=str(sd.get("slugline", "")),
+                    scene_summary=str(sd.get("scene_summary", "")),
+                ))
+            except Exception:
+                pass
+
+    logger.info(f"  Total: {len(scenes)} unique scenes")
+
+    # Global summary
+    global_data = {}
+    if scenes:
+        try:
+            global_data = _generate_global_summary(scenes, title)
+        except Exception as e:
+            logger.error(f"  Global summary failed: {e}")
+
+    total_elapsed = time.time() - total_start
+    logger.info(f"=== Done: {len(scenes)} scenes in {total_elapsed:.1f}s ===")
+
+    return BreakdownOutput(
+        project_summary=ProjectSummary(
+            project_title=title,
+            date_analyzed=datetime.now().strftime("%Y-%m-%d %H:%M"),
+            total_scene_count=len(scenes),
+        ),
+        global_flags=GlobalFlags(
+            **global_data.get("global_flags", {})
+        ) if "global_flags" in global_data else GlobalFlags(),
+        scenes=scenes,
+        hidden_cost_radar=[
+            HiddenCostItem(**item)
+            for item in global_data.get("hidden_cost_radar", [])
+            if isinstance(item, dict)
+        ],
+        key_questions_for_team=KeyQuestions(
+            **global_data.get("key_questions_for_team", {})
+        ) if "key_questions_for_team" in global_data else KeyQuestions(),
     )
-
-    # Parse synthesis result
-    from sba.output.validate import (
-        _strip_markdown_fences,
-        _try_parse_json,
-        _try_repair_json,
-    )
-
-    stripped = _strip_markdown_fences(synthesis_raw)
-    synthesis_data, err = _try_parse_json(stripped)
-    if synthesis_data is None:
-        synthesis_data, err = _try_repair_json(stripped)
-    if synthesis_data is None:
-        # Use defaults
-        synthesis_data = {}
-
-    # Step 4: Assemble final output
-    from sba.output.schema import GlobalFlags, KeyQuestions, ProjectSummary
-
-    project_summary = ProjectSummary.model_validate(
-        synthesis_data.get(
-            "project_summary",
-            {
-                "project_title": title,
-                "date_analyzed": datetime.now(timezone.utc).isoformat(),
-                "total_scene_count": total_scenes,
-                "script_pages_estimate": parsed.total_pages_estimate,
-            },
-        )
-    )
-
-    global_flags = GlobalFlags.model_validate(synthesis_data.get("global_flags", {}))
-
-    from sba.output.schema import HiddenCostItem
-
-    hidden_costs = [
-        HiddenCostItem.model_validate(item) for item in synthesis_data.get("hidden_cost_radar", [])
-    ]
-
-    key_questions = KeyQuestions.model_validate(synthesis_data.get("key_questions_for_team", {}))
-
-    final = BreakdownOutput(
-        project_summary=project_summary,
-        global_flags=global_flags,
-        scenes=all_scene_results,
-        hidden_cost_radar=hidden_costs,
-        key_questions_for_team=key_questions,
-    )
-
-    # Cache the result
-    if use_cache:
-        from sba.cache import set_cached
-
-        set_cached(script_text, model, final.model_dump(mode="json"))
-
-    return final

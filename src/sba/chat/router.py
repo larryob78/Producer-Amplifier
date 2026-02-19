@@ -58,6 +58,19 @@ def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
 async def send_message(req: ChatRequest) -> ChatResponse:
     """Send a message to the Producer Copilot and get a response."""
     start = time.time()
+
+    # Guard: return friendly message if no API key configured
+    if not ANTHROPIC_API_KEY:
+        return ChatResponse(
+            reply="I need an Anthropic API key to work. Add ANTHROPIC_API_KEY to your .env file.",
+            thinking=None,
+            data_card=None,
+            model_used="none",
+            route_reason="no_api_key",
+            cost_estimate_usd=0.0,
+            duration_ms=0,
+        )
+
     client = _get_client()
 
     # Route to optimal model

@@ -1,0 +1,76 @@
+{
+  "project_summary": {
+    "project_title": "allta_playbook",
+    "date_analyzed": "2025-06-13T00:00:00Z",
+    "analysis_scope": "excerpt",
+    "script_pages_estimate": 1,
+    "total_scene_count": 0,
+    "confidence_notes": [
+      "No scene data provided for analysis",
+      "Cannot assess VFX requirements without scene breakdowns",
+      "This appears to be a placeholder or incomplete script submission",
+      "Assessment is speculative and should not be used for budgeting"
+    ]
+  },
+  "global_flags": {
+    "overall_vfx_heaviness": "low",
+    "likely_virtual_production_fit": "low",
+    "top_risk_themes": [
+      "Insufficient data to assess VFX requirements",
+      "No scene context for vendor scoping",
+      "Cannot identify technical dependencies or workflows"
+    ]
+  },
+  "scenes": [],
+  "hidden_cost_radar": [
+    {
+      "flag": "Zero Scene Data",
+      "severity": "critical",
+      "where": [],
+      "why_it_matters": "Without scene breakdowns, no meaningful VFX assessment can be performed. This creates total budget uncertainty and prevents vendor conversations, crew planning, or technical prep.",
+      "mitigation_ideas": [
+        "Resubmit with complete script or scene breakdowns",
+        "If this is a treatment/pitch deck, clarify the nature of the document",
+        "Provide at least high-level shot list or visual references",
+        "Schedule script analysis session once material is available"
+      ]
+    },
+    {
+      "flag": "Incomplete Submission",
+      "severity": "high",
+      "where": [],
+      "why_it_matters": "Single-page documents rarely contain sufficient detail for VFX planning. May indicate technical issues with script parsing or document format problems.",
+      "mitigation_ideas": [
+        "Verify script file format and completeness",
+        "Check if document is a cover page rather than full script",
+        "Confirm scene headings follow standard screenplay format",
+        "Review export settings if converted from writing software"
+      ]
+    }
+  ],
+  "key_questions_for_team": {
+    "for_producer": [
+      "Is this the complete script or a partial submission?",
+      "What is the actual page count and format of the source material?",
+      "Do we have scene breakdowns or shot lists available elsewhere?",
+      "What stage of development is this project in?",
+      "Should we wait for a revised script before VFX assessment?"
+    ],
+    "for_vfx_supervisor": [
+      "Can you provide visual references or concept art for expected VFX work?",
+      "Are there any known VFX sequences planned that aren't in this document?",
+      "What is the target VFX complexity/budget tier for this project?",
+      "Should we schedule a creative meeting to outline VFX intentions?"
+    ],
+    "for_dp_camera": [
+      "Are there any technical camera requirements we should know about?",
+      "Will this project require greenscreen, motion control, or specialized rigs?",
+      "What is the target delivery format and resolution?"
+    ],
+    "for_locations_art_dept": [
+      "Are there set extensions or environment VFX anticipated?",
+      "Will practical builds require VFX integration planning?",
+      "Do locations need to support tracking markers or LED volumes?"
+    ]
+  }
+}

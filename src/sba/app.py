@@ -34,6 +34,8 @@ app.include_router(chat_router)
 
 # In-memory store for the currently loaded script
 _current_script = None
+_current_analysis = None
+_current_raw_text = None
 
 
 @app.on_event("startup")
@@ -41,7 +43,6 @@ async def startup():
     """Load budget on startup if path is configured."""
     if MASTER_BUDGET_PATH:
         from sba.budget.excel_reader import load_budget
-
         try:
             load_budget(MASTER_BUDGET_PATH)
             print(f"\u2713 Budget loaded from {MASTER_BUDGET_PATH}")
@@ -60,17 +61,16 @@ async def root():
 
 @app.get("/npa-integration.js")
 async def serve_integration_js():
-    """Serve the NPA integration layer (chat, budget, voice injection)."""
+    """Serve the NPA integration JavaScript."""
     js_path = PROJECT_ROOT / "npa-integration.js"
     if js_path.exists():
         return FileResponse(js_path, media_type="application/javascript")
-    return JSONResponse({"error": "npa-integration.js not found"}, status_code=404)
+    return JSONResponse(status_code=404, content={"error": "npa-integration.js not found"})
 
 
 # ================================================================
 # SCRIPT UPLOAD — accepts any format
 # ================================================================
-
 
 @app.post("/api/script/upload")
 async def upload_script(
@@ -139,6 +139,8 @@ async def upload_script(
             result["scenes"].append(s)
 
         _current_script = result
+        global _current_raw_text
+        _current_raw_text = parsed.raw_text
         return result
 
     except Exception as e:
@@ -156,6 +158,47 @@ async def get_current_script():
     if _current_script is None:
         return {"error": "No script loaded. Upload one via /api/script/upload"}
     return _current_script
+
+
+@app.post("/api/script/analyze")
+async def analyze_script_endpoint():
+    """Run Claude analysis on the currently loaded script.
+
+    Requires a script to be loaded via /api/script/upload first.
+    Returns the full BreakdownOutput JSON.
+    """
+    global _current_analysis
+
+    if _current_raw_text is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No script loaded. Upload one via /api/script/upload first."},
+        )
+
+    from sba.llm.generator import analyze_script_staged
+
+    try:
+        title = _current_script.get("title", "Untitled") if _current_script else "Untitled"
+        # Reconstruct text from parsed scenes if raw_text is empty
+        _text = _current_raw_text
+        if not _text and _current_script:
+            _text = "\n\n".join(
+                str(s.get("slugline","")) + "\n" + str(s.get("text", s.get("body", s.get("content", ""))))
+                for s in _current_script.get("scenes", [])
+            )
+        if not _text:
+            return JSONResponse(status_code=400, content={"error": "No script text available."})
+        result = analyze_script_staged(
+            text=_text,
+            title=title,
+        )
+        _current_analysis = result
+        return result.model_dump(mode="json")
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)},
+        )
 
 
 @app.get("/api/script/formats")
@@ -180,12 +223,10 @@ async def supported_formats():
 # HEALTH & BUDGET
 # ================================================================
 
-
 @app.get("/api/health")
 async def health():
     """Health check endpoint."""
     from sba.budget.excel_reader import _workbook
-
     return {
         "status": "ok",
         "budget_loaded": _workbook is not None,
@@ -198,7 +239,6 @@ async def health():
 async def budget_summary():
     """Get the current budget summary for the budget bar."""
     from sba.budget.excel_reader import get_budget_summary
-
     try:
         return get_budget_summary()
     except RuntimeError as e:
@@ -209,7 +249,6 @@ async def budget_summary():
 async def budget_vfx():
     """Get VFX detail by scene."""
     from sba.budget.excel_reader import get_vfx_detail
-
     try:
         return get_vfx_detail()
     except RuntimeError as e:
@@ -220,7 +259,6 @@ async def budget_vfx():
 async def budget_account(code: int):
     """Read a specific budget account by Hollywood code (1100-9000)."""
     from sba.budget.excel_reader import read_account
-
     try:
         return read_account(code)
     except Exception as e:
@@ -236,7 +274,6 @@ async def budget_update(
 ):
     """Update a budget account value (writes to Excel with audit trail)."""
     from sba.budget.excel_writer import update_account
-
     try:
         result = update_account(account_code, field, value, reason)
         return result
@@ -245,21 +282,69 @@ async def budget_update(
 
 
 # ================================================================
-# VOICE
+# EXPORT
 # ================================================================
 
+
+@app.get("/api/export/csv")
+async def export_csv():
+    """Export current analysis as CSV download."""
+    if _current_analysis is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No analysis loaded. Run /api/script/analyze first."},
+        )
+
+    from sba.output.export_csv import export_scenes_csv_string
+
+    csv_text = export_scenes_csv_string(_current_analysis)
+    title = "breakdown"
+    if _current_script:
+        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
+
+    return StreamingResponse(
+        io.BytesIO(csv_text.encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{title}_breakdown.csv"'},
+    )
+
+
+@app.get("/api/export/html")
+async def export_html_endpoint():
+    """Export current analysis as standalone HTML production bible."""
+    if _current_analysis is None:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No analysis loaded. Run /api/script/analyze first."},
+        )
+
+    from sba.output.export_html import _build_html
+
+    html = _build_html(_current_analysis)
+    title = "breakdown"
+    if _current_script:
+        title = _current_script.get("title", "breakdown").replace(" ", "_").lower()
+
+    return StreamingResponse(
+        io.BytesIO(html.encode("utf-8")),
+        media_type="text/html",
+        headers={"Content-Disposition": f'attachment; filename="{title}_bible.html"'},
+    )
+
+
+# ================================================================
+# VOICE
+# ================================================================
 
 @app.post("/api/voice/transcribe")
 async def voice_transcribe(audio: UploadFile = File(...)):
     """Transcribe voice audio to text via Whisper STT."""
     from sba.config import OPENAI_API_KEY
-
     if not OPENAI_API_KEY:
         return {"error": "OPENAI_API_KEY not set. Required for Whisper STT."}
 
     try:
         from sba.voice.stt import transcribe_audio
-
         audio_bytes = await audio.read()
         text = await transcribe_audio(audio_bytes)
         return {"text": text}
@@ -273,13 +358,11 @@ async def voice_transcribe(audio: UploadFile = File(...)):
 async def voice_speak(text: str = Form(...)):
     """Convert text to speech via ElevenLabs TTS. Returns audio stream."""
     from sba.config import ELEVENLABS_API_KEY
-
     if not ELEVENLABS_API_KEY:
         return {"error": "ELEVENLABS_API_KEY not set. Required for TTS."}
 
     try:
         from sba.voice.tts import synthesize_speech
-
         audio_bytes = await synthesize_speech(text)
         return StreamingResponse(
             io.BytesIO(audio_bytes),
