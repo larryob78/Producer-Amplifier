@@ -42,7 +42,8 @@ def _scene_to_row(scene: Scene) -> dict[str, str]:
         ]
         if val
     ]
-
+    # vfx_categories is list[str] — use directly (no .value needed)
+    vfx_cats = [c if isinstance(c, str) else c.value for c in scene.vfx_categories]
     return {
         "scene_id": scene.scene_id,
         "slugline": scene.slugline,
@@ -52,7 +53,7 @@ def _scene_to_row(scene: Scene) -> dict[str, str]:
         "location_type": scene.location_type,
         "characters": _pipe_join(scene.characters),
         "scene_summary": scene.scene_summary,
-        "vfx_categories": _pipe_join([c.value for c in scene.vfx_categories]),
+        "vfx_categories": _pipe_join(vfx_cats),
         "vfx_triggers": _pipe_join(scene.vfx_triggers),
         "production_flags": _pipe_join(active_flags),
         "vfx_shots_min": str(scene.vfx_shot_count_estimate.min),
@@ -103,13 +104,11 @@ def export_scenes_csv(breakdown: BreakdownOutput, output_path: Path) -> Path:
     Returns the path to the written file.
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
         writer.writeheader()
         for scene in breakdown.scenes:
             writer.writerow(_scene_to_row(scene))
-
     return output_path
 
 
@@ -148,7 +147,7 @@ def _scene_to_row_full(scene: Scene) -> dict[str, str]:
         ]
         if val
     ]
-
+    vfx_cats = [c if isinstance(c, str) else c.value for c in scene.vfx_categories]
     return {
         "scene_id": scene.scene_id,
         "slugline": scene.slugline,
@@ -158,7 +157,7 @@ def _scene_to_row_full(scene: Scene) -> dict[str, str]:
         "location_type": scene.location_type,
         "characters": _pipe_join_full(scene.characters),
         "scene_summary": scene.scene_summary,
-        "vfx_categories": _pipe_join_full([c.value for c in scene.vfx_categories]),
+        "vfx_categories": _pipe_join_full(vfx_cats),
         "vfx_triggers": _pipe_join_full(scene.vfx_triggers),
         "production_flags": _pipe_join_full(active_flags),
         "vfx_shots_min": str(scene.vfx_shot_count_estimate.min),
@@ -184,11 +183,9 @@ def export_scenes_csv_full(breakdown: BreakdownOutput, output_path: Path) -> Pat
     Returns the path to the written file.
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
         writer.writeheader()
         for scene in breakdown.scenes:
             writer.writerow(_scene_to_row_full(scene))
-
     return output_path
