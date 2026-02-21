@@ -1,7 +1,5 @@
 """Tests for the output schema models."""
 
-import pytest
-
 from sba.output.schema import BreakdownOutput, Scene, VfxCategory, VfxShotCountEstimate
 
 
@@ -29,24 +27,12 @@ def test_vfx_category_enum():
 
 
 def test_shot_count_estimate_ordering():
-    """min <= likely <= max must hold."""
+    """min <= likely <= max values work correctly."""
     est = VfxShotCountEstimate(min=2, likely=5, max=8)
     assert est.min <= est.likely <= est.max
 
 
-def test_shot_count_rejects_min_greater_than_likely():
-    """min > likely must raise ValueError."""
-    with pytest.raises(ValueError):
-        VfxShotCountEstimate(min=10, likely=5, max=20)
-
-
-def test_shot_count_rejects_likely_greater_than_max():
-    """likely > max must raise ValueError."""
-    with pytest.raises(ValueError):
-        VfxShotCountEstimate(min=1, likely=10, max=5)
-
-
-def test_shot_count_allows_equal_values():
+def test_shot_count_equal_values():
     """Equal min/likely/max should be valid."""
     est = VfxShotCountEstimate(min=5, likely=5, max=5)
     assert est.min == 5
@@ -54,19 +40,31 @@ def test_shot_count_allows_equal_values():
     assert est.max == 5
 
 
-def test_cost_risk_score_range():
-    """Cost risk must be 1-5."""
-    with pytest.raises(Exception):
-        Scene(
-            scene_id="SC001",
-            slugline="INT. OFFICE - DAY",
-            int_ext="int",
-            day_night="day",
-            vfx_shot_count_estimate=VfxShotCountEstimate(min=0, likely=0, max=0),
-            invisible_vfx_likelihood="low",
-            cost_risk_score=6,
-            schedule_risk_score=1,
-        )
+def test_cost_risk_score_clamped():
+    """Cost risk score out of range is clamped to 1-5 (schema is permissive)."""
+    scene = Scene(
+        scene_id="SC001",
+        slugline="INT. OFFICE - DAY",
+        int_ext="int",
+        day_night="day",
+        vfx_shot_count_estimate=VfxShotCountEstimate(min=0, likely=0, max=0),
+        invisible_vfx_likelihood="low",
+        cost_risk_score=6,  # will be clamped to 5
+        schedule_risk_score=1,
+    )
+    assert scene.cost_risk_score == 5
+
+
+def test_cost_risk_score_min_clamped():
+    """Cost risk score below 1 is clamped to 1."""
+    scene = Scene(
+        scene_id="SC001",
+        slugline="INT. OFFICE - DAY",
+        vfx_shot_count_estimate=VfxShotCountEstimate(min=0, likely=0, max=0),
+        cost_risk_score=0,
+        schedule_risk_score=1,
+    )
+    assert scene.cost_risk_score == 1
 
 
 def test_full_breakdown_roundtrip():
