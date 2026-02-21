@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "napkin-producer-amplifier"
-version = "0.4.0"
+version = "0.5.0"
 description = "AI-powered production intelligence for film producers — script breakdown, budget, chatbot, voice"
 requires-python = ">=3.11"
 dependencies = [
@@ -34,7 +34,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=24.0",
+    "isort>=5.13",
+    "ruff>=0.3.0",
+]
 
 [project.scripts]
 sba = "sba.cli:main"
